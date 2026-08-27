@@ -154,3 +154,24 @@ Ask the student ONE engaging, simple question in English related to "${lesson.to
 Keep it short (1-2 sentences).`;
   return callAgy(prompt);
 }
+
+export function getLessonTheory(lesson) {
+  const prompt = `You are a master English linguistics and grammar teacher.
+Generate a concise, crystal-clear "Micro-Theory Cheat Sheet" in Spanish for a student about to start this lesson:
+Level: ${lesson.unitLevel}
+Lesson: ${lesson.title}
+Grammar Focus: ${lesson.grammar}
+Topic: ${lesson.topic}
+
+Include:
+1. Core Rule: Explain the concept simply in Spanish.
+2. Common Pitfalls / Traps: What mistakes do Spanish speakers usually make here? (e.g. sound vs letter for a/an, missing 's' in 3rd person).
+3. 3 Clear Formula/Examples with English and Spanish translation.
+
+Reply ONLY with a raw JSON object (no markdown, no code fences):
+  title: string
+  explanation: string (2-3 sentences explaining the core concept in Spanish)
+  rules: Array<{ rule: string, example: string, note: string }>
+  tip: string (a golden rule or memory trick in Spanish)`;
+  return JSON.parse(callAgy(prompt));
+}

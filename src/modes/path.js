@@ -9,6 +9,7 @@ import {
   getLessonPhrase,
   getLessonFillBlank,
   getLessonChatPrompt,
+  getLessonTheory,
   checkTranslation,
   checkGrammar,
   chatReply
@@ -239,6 +240,30 @@ export async function runPath(stats) {
   console.log(chalk.bold.cyan(`══════════════════════════════════════════════════════════════════\n`));
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+  const theorySpinner = ora({ text: 'Preparando píldora teórica...', color: 'magenta', indent: 2 }).start();
+  try {
+    const theory = getLessonTheory(lesson);
+    theorySpinner.stop();
+    console.log(chalk.bold.magenta('┌─── 📖 PÍLDORA TEÓRICA ───────────────────────────────────────────┐'));
+    console.log(chalk.white(`│  ${chalk.bold(theory.title || lesson.title)}`));
+    console.log(chalk.gray(`│  ${theory.explanation}\n│`));
+    if (theory.rules) {
+      theory.rules.forEach((r) => {
+        console.log(chalk.yellow(`│  • ${r.rule}`));
+        console.log(chalk.white(`│    Ejemplo: ${r.example}`));
+        if (r.note) console.log(chalk.gray(`│    Ojo: ${r.note}`));
+        console.log(chalk.gray('│'));
+      });
+    }
+    if (theory.tip) {
+      console.log(chalk.bold.cyan(`│  💡 Regla de oro: ${theory.tip}`));
+    }
+    console.log(chalk.bold.magenta('└──────────────────────────────────────────────────────────────────┘\n'));
+    await ask(rl, chalk.bold.green('  Presioná [ENTER] cuando estés listo para los ejercicios › '));
+  } catch (err) {
+    theorySpinner.stop();
+  }
 
   let passedCount = 0;
   const exercises = lesson.exercises || ['translate', 'fillblank', 'chat'];
