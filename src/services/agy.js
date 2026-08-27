@@ -113,3 +113,44 @@ Reply ONLY with a raw JSON object (no markdown, no code fences):
   explanation: string — brief explanation of the rule`;
   return JSON.parse(callAgy(prompt));
 }
+
+export function getLessonPhrase(lesson) {
+  const seed = Math.floor(Math.random() * 10000);
+  const prompt = `Generate a single Spanish sentence for an English translation exercise specifically for this lesson:
+Lesson Title: ${lesson.title}
+Target Topic: ${lesson.topic}
+Grammar Focus: ${lesson.grammar}
+Seed: ${seed}
+
+Make sure the sentence tests the exact grammar focus and topic above.
+Reply ONLY with a raw JSON object (no markdown, no code fences):
+  spanish: string — the Spanish sentence
+  english: string — the correct English translation
+  hint: string — a helpful grammar tip focused on ${lesson.grammar}`;
+  return JSON.parse(callAgy(prompt));
+}
+
+export function getLessonFillBlank(lesson) {
+  const seed = Math.floor(Math.random() * 10000);
+  const prompt = `Generate an English fill-in-the-blank exercise for this lesson:
+Lesson Title: ${lesson.title}
+Target Topic: ${lesson.topic}
+Grammar Focus: ${lesson.grammar}
+Seed: ${seed}
+
+Create a sentence where the blank "___" tests the grammar focus (${lesson.grammar}).
+Reply ONLY with a raw JSON object (no markdown, no code fences):
+  sentence: string — sentence with exactly one "___"
+  answer: string — correct word or phrase
+  hint: string — tip referencing ${lesson.grammar}
+  explanation: string — why this answer fits the grammar rule`;
+  return JSON.parse(callAgy(prompt));
+}
+
+export function getLessonChatPrompt(lesson) {
+  const prompt = `You are a conversational English tutor for a student working on:
+Lesson: ${lesson.title} (${lesson.grammar}).
+Ask the student ONE engaging, simple question in English related to "${lesson.topic}" that prompts them to reply using "${lesson.grammar}".
+Keep it short (1-2 sentences).`;
+  return callAgy(prompt);
+}

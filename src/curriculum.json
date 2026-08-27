@@ -1,0 +1,233 @@
+{
+  "units": [
+    {
+      "id": "A1",
+      "level": "A1",
+      "title": "The Basics",
+      "description": "Survival English — introduce yourself and navigate simple situations",
+      "lessons": [
+        {
+          "id": "A1.1",
+          "title": "Hello & Introductions",
+          "topic": "personal information, greetings, names, where you are from",
+          "grammar": "verb to be (am/is/are), personal pronouns (I, you, he, she)",
+          "exercises": ["translate", "fillblank", "chat"]
+        },
+        {
+          "id": "A1.2",
+          "title": "Articles & Nouns",
+          "topic": "everyday objects, rooms, basic vocabulary",
+          "grammar": "a/an/the, singular and plural nouns",
+          "exercises": ["fillblank", "translate", "fillblank"]
+        },
+        {
+          "id": "A1.3",
+          "title": "Daily Routines",
+          "topic": "daily habits, times of day, frequency",
+          "grammar": "present simple (I eat, she works), adverbs of frequency (always, never, sometimes)",
+          "exercises": ["translate", "fillblank", "chat"]
+        },
+        {
+          "id": "A1.4",
+          "title": "Numbers, Time & Dates",
+          "topic": "telling the time, days of the week, months",
+          "grammar": "prepositions of time (at, on, in), cardinal and ordinal numbers",
+          "exercises": ["fillblank", "translate", "fillblank"]
+        },
+        {
+          "id": "A1.5",
+          "title": "Asking Questions",
+          "topic": "information questions, yes/no questions",
+          "grammar": "question formation with Wh- words (what, where, when, who, why, how)",
+          "exercises": ["translate", "chat", "fillblank"]
+        }
+      ]
+    },
+    {
+      "id": "A2",
+      "level": "A2",
+      "title": "Getting Around",
+      "description": "Handle everyday situations — travel, shopping, describing the past",
+      "lessons": [
+        {
+          "id": "A2.1",
+          "title": "Past Simple — Regular Verbs",
+          "topic": "weekend activities, recent events",
+          "grammar": "past simple with -ed endings, time expressions (yesterday, last week, ago)",
+          "exercises": ["translate", "fillblank", "chat"]
+        },
+        {
+          "id": "A2.2",
+          "title": "Past Simple — Irregular Verbs",
+          "topic": "travel stories, memorable experiences",
+          "grammar": "common irregular verbs (went, saw, ate, had, did, came, took)",
+          "exercises": ["fillblank", "translate", "fillblank"]
+        },
+        {
+          "id": "A2.3",
+          "title": "Comparatives & Superlatives",
+          "topic": "comparing places, people, things",
+          "grammar": "comparative (-er / more) and superlative (-est / most) adjectives",
+          "exercises": ["translate", "fillblank", "chat"]
+        },
+        {
+          "id": "A2.4",
+          "title": "Modal Verbs — Basics",
+          "topic": "rules, advice, ability, permission",
+          "grammar": "can, can't, should, shouldn't, must, have to",
+          "exercises": ["fillblank", "translate", "fillblank"]
+        },
+        {
+          "id": "A2.5",
+          "title": "Future Plans",
+          "topic": "plans, intentions, predictions",
+          "grammar": "going to (plans), will (spontaneous decisions, predictions)",
+          "exercises": ["translate", "chat", "fillblank"]
+        },
+        {
+          "id": "A2.6",
+          "title": "Common Phrasal Verbs",
+          "topic": "daily life actions",
+          "grammar": "wake up, get up, turn on/off, look for, give up, pick up",
+          "exercises": ["fillblank", "translate", "fillblank"]
+        }
+      ]
+    },
+    {
+      "id": "B1",
+      "level": "B1",
+      "title": "Speaking Your Mind",
+      "description": "Express opinions, talk about experiences, handle most conversations",
+      "lessons": [
+        {
+          "id": "B1.1",
+          "title": "Present Perfect",
+          "topic": "life experiences, recent news",
+          "grammar": "have/has + past participle, ever/never, just/already/yet",
+          "exercises": ["translate", "fillblank", "chat"]
+        },
+        {
+          "id": "B1.2",
+          "title": "Present & Past Continuous",
+          "topic": "ongoing actions, interrupted events, storytelling",
+          "grammar": "was/were + -ing, while vs when, time clauses",
+          "exercises": ["translate", "fillblank", "chat"]
+        },
+        {
+          "id": "B1.3",
+          "title": "Zero & First Conditionals",
+          "topic": "facts, rules, real future situations",
+          "grammar": "if + present simple + present simple / if + present simple + will",
+          "exercises": ["fillblank", "translate", "fillblank"]
+        },
+        {
+          "id": "B1.4",
+          "title": "Gerunds vs Infinitives",
+          "topic": "likes, dislikes, habits, intentions",
+          "grammar": "verb + -ing (enjoy, avoid, stop) vs verb + to (want, decide, hope)",
+          "exercises": ["fillblank", "translate", "chat"]
+        },
+        {
+          "id": "B1.5",
+          "title": "Linking Words",
+          "topic": "expressing contrast, reason, result",
+          "grammar": "however, although, because, so, therefore, despite, in spite of",
+          "exercises": ["translate", "fillblank", "chat"]
+        }
+      ]
+    },
+    {
+      "id": "B2",
+      "level": "B2",
+      "title": "Complex Ideas",
+      "description": "Discuss abstract topics, debate, write formally",
+      "lessons": [
+        {
+          "id": "B2.1",
+          "title": "Passive Voice",
+          "topic": "news, science, processes, formal writing",
+          "grammar": "is/are + past participle, was/were + past participle, passive with modals",
+          "exercises": ["translate", "fillblank", "chat"]
+        },
+        {
+          "id": "B2.2",
+          "title": "Second Conditional",
+          "topic": "hypothetical situations, advice, dreams",
+          "grammar": "if + past simple + would/could/might",
+          "exercises": ["fillblank", "translate", "fillblank"]
+        },
+        {
+          "id": "B2.3",
+          "title": "Third Conditional",
+          "topic": "regrets, past hypotheticals, criticism",
+          "grammar": "if + past perfect + would have + past participle",
+          "exercises": ["translate", "fillblank", "chat"]
+        },
+        {
+          "id": "B2.4",
+          "title": "Narrative Tenses",
+          "topic": "storytelling, anecdotes, news reports",
+          "grammar": "past simple + past continuous + past perfect together",
+          "exercises": ["translate", "chat", "fillblank"]
+        },
+        {
+          "id": "B2.5",
+          "title": "Relative Clauses",
+          "topic": "defining and describing people, places, things",
+          "grammar": "who, which, that, where, whose — defining and non-defining clauses",
+          "exercises": ["fillblank", "translate", "fillblank"]
+        },
+        {
+          "id": "B2.6",
+          "title": "Advanced Modal Verbs",
+          "topic": "speculation, deduction, regret",
+          "grammar": "must/can't/might/could + have + past participle (past modals)",
+          "exercises": ["translate", "fillblank", "chat"]
+        }
+      ]
+    },
+    {
+      "id": "C1",
+      "level": "C1",
+      "title": "Mastery",
+      "description": "Nuanced, fluent communication — academic, professional, persuasive",
+      "lessons": [
+        {
+          "id": "C1.1",
+          "title": "Mixed Conditionals",
+          "topic": "complex hypotheticals mixing past and present",
+          "grammar": "if + past perfect + would + infinitive (and vice versa)",
+          "exercises": ["translate", "fillblank", "chat"]
+        },
+        {
+          "id": "C1.2",
+          "title": "Inversion & Emphasis",
+          "topic": "formal writing, speeches, strong emphasis",
+          "grammar": "never have I, not only did, hardly had, seldom does — fronting for emphasis",
+          "exercises": ["fillblank", "translate", "fillblank"]
+        },
+        {
+          "id": "C1.3",
+          "title": "Nominalisation",
+          "topic": "academic and professional writing",
+          "grammar": "turning verbs/adjectives into nouns (decide → decision, develop → development)",
+          "exercises": ["translate", "fillblank", "chat"]
+        },
+        {
+          "id": "C1.4",
+          "title": "Advanced Connectors",
+          "topic": "essays, debates, formal arguments",
+          "grammar": "notwithstanding, insofar as, with a view to, on the grounds that, inasmuch as",
+          "exercises": ["translate", "chat", "fillblank"]
+        },
+        {
+          "id": "C1.5",
+          "title": "Cleft Sentences",
+          "topic": "highlighting specific information in speech and writing",
+          "grammar": "It is/was... that/who, What I need is..., What happened was...",
+          "exercises": ["fillblank", "translate", "chat"]
+        }
+      ]
+    }
+  ]
+}

@@ -4,14 +4,17 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { getWordOfDay } from './services/agy.js';
 import { loadHistory, recordSession } from './services/history.js';
+import { loadProgress } from './services/progress.js';
 import { SessionStats } from './services/stats.js';
 import { banner, printWordOfDay } from './ui/display.js';
+import { runPath } from './modes/path.js';
 import { runChat } from './modes/chat.js';
 import { runTranslate } from './modes/translate.js';
 import { runFillBlank } from './modes/fillblank.js';
 import { runReview } from './modes/review.js';
 
 const MODES = {
+  PATH: '🗺️  Learning Path (CEFR A1 ➔ C1)',
   CHAT: '💬 Free Chat',
   TRANSLATE: '🌍 Translate (ES → EN)',
   FILLBLANK: '✏️  Fill in the Blank',
@@ -42,10 +45,11 @@ async function main() {
     wodSpinner.stop();
   }
 
-  // Best streak
+  // Stats & Progress Overview
   const history = loadHistory();
-  if (history.bestStreak > 0) {
-    console.log(chalk.yellow(`  🏆 Best streak: ${history.bestStreak} in a row!\n`));
+  const progress = loadProgress();
+  if (history.bestStreak > 0 || progress.xp > 0) {
+    console.log(chalk.yellow(`  🏆 Best streak: ${history.bestStreak} in a row | ⚡ XP: ${progress.xp} | 🎓 Lessons: ${progress.completedLessons.length} done\n`));
   }
 
   let playAgain = true;
@@ -53,6 +57,7 @@ async function main() {
     const modeKey = await select({
       message: 'Choose your mode:',
       choices: [
+        { name: MODES.PATH,      value: 'PATH' },
         { name: MODES.CHAT,      value: 'CHAT' },
         { name: MODES.TRANSLATE, value: 'TRANSLATE' },
         { name: MODES.FILLBLANK, value: 'FILLBLANK' },
@@ -64,13 +69,14 @@ async function main() {
     if (modeKey === 'QUIT') break;
 
     let difficulty = 'beginner';
-    if (modeKey !== 'REVIEW') {
+    if (modeKey !== 'REVIEW' && modeKey !== 'PATH') {
       difficulty = await getDifficulty();
     }
 
     console.log();
     const stats = new SessionStats(MODES[modeKey]);
 
+    if (modeKey === 'PATH')      await runPath(stats);
     if (modeKey === 'CHAT')      await runChat(stats, difficulty);
     if (modeKey === 'TRANSLATE') await runTranslate(stats, difficulty);
     if (modeKey === 'FILLBLANK') await runFillBlank(stats, difficulty);
