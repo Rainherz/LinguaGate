@@ -9,6 +9,11 @@ function callAgy(prompt) {
   return raw.trim().replace(/^```json\s*/i, '').replace(/\s*```$/, '');
 }
 
+
+const SPANISH_TOPICS = ["family","food and cooking","work and jobs","travel","weather","sports","technology","health","shopping","school and education","nature","music","movies","daily routines","feelings and emotions","animals","cities and places","money","hobbies","time and schedules"];
+const FILLBLANK_TOPICS = ["prepositions of place","articles (a/an/the)","verb tenses","modal verbs","phrasal verbs","comparatives and superlatives","collocations","conjunctions","conditionals","relative clauses","passive voice","reported speech"];
+function randomPick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
 export function checkGrammar(text) {
   const prompt = `You are a strict English grammar checker.
 Check if the following text has grammar or spelling errors.
@@ -32,7 +37,10 @@ User: ${userMessage}`;
 }
 
 export function getSpanishPhrase(difficulty) {
+  const topic = randomPick(SPANISH_TOPICS);
+  const seed = Math.floor(Math.random() * 10000);
   const prompt = `Generate a single Spanish sentence for an English translation exercise.
+Topic: ${topic} (seed: ${seed})
 Difficulty: ${difficulty}
 - beginner: simple present tense, common vocabulary, short sentences
 - intermediate: past/future tenses, idioms, compound sentences
@@ -46,7 +54,10 @@ Reply ONLY with a raw JSON object (no markdown, no code fences):
 }
 
 export function getFillBlank(difficulty) {
+  const topic = randomPick(FILLBLANK_TOPICS);
+  const seed = Math.floor(Math.random() * 10000);
   const prompt = `Generate an English fill-in-the-blank exercise.
+Topic: ${topic} (seed: ${seed})
 Difficulty: ${difficulty}
 - beginner: articles, simple verbs, prepositions
 - intermediate: phrasal verbs, conjunctions, modal verbs
