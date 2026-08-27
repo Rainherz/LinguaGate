@@ -2,7 +2,7 @@ import readline from 'node:readline';
 import ora from 'ora';
 import chalk from 'chalk';
 import { getMistakeExercise } from '../services/agy.js';
-import { getTopErrors } from '../services/history.js';
+import { getDueSrsCards, reviewSrsCard } from '../services/history.js';
 import { printDivider } from '../ui/display.js';
 
 function ask(rl, question) {
@@ -10,30 +10,40 @@ function ask(rl, question) {
 }
 
 export async function runReview(stats) {
-  console.log(chalk.gray('\n  🔄 Review My Mistakes mode.\n'));
+  console.log(chalk.bold.cyan('\n══════════════════════════════════════════════════════════════════'));
+  console.log(chalk.bold.yellow('  🧠 SPACED REPETITION REVIEW (SRS / SM-2)'));
+  console.log(chalk.gray('  Practicing grammar patterns and mistakes due for retention.'));
+  console.log(chalk.bold.cyan('══════════════════════════════════════════════════════════════════\n'));
 
-  const topErrors = getTopErrors(3);
-  if (topErrors.length === 0) {
-    console.log(chalk.yellow('  No mistakes recorded yet! Go practice first.\n'));
+  const dueCards = getDueSrsCards();
+  if (dueCards.length === 0) {
+    console.log(chalk.green('  ✨ No cards currently due for review! Excellent job.\n'));
+    console.log(chalk.gray('  Keep chatting or doing lessons to add new challenge cards.\n'));
     return;
   }
 
-  console.log(chalk.bold('  Your most common mistakes:'));
-  topErrors.forEach(({ type, count }, i) => {
-    console.log(chalk.red(`    ${i + 1}. ${type} (${count}x)`));
+  console.log(chalk.bold(`  📚 Cards queued for review today (${dueCards.length}):`));
+  dueCards.forEach((card, i) => {
+    const repText = card.repetition > 0 ? `(Streak: ${card.repetition}x | Int: ${card.interval}d)` : `(Needs Practice)`;
+    console.log(chalk.yellow(`    ${i + 1}. ${card.rule} ${chalk.gray(repText)}`));
   });
   console.log();
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
-  for (const { type } of topErrors) {
+  for (let i = 0; i < dueCards.length; i++) {
+    const card = dueCards[i];
     printDivider();
-    console.log(chalk.bold.yellow(`  Targeting: ${type}\n`));
+    console.log(chalk.bold.magenta(`  [Card ${i + 1}/${dueCards.length}] `) + chalk.bold.yellow(`Rule: ${card.rule}`));
+    if (card.lastMistake?.original) {
+      console.log(chalk.gray(`  Last caught on: "${card.lastMistake.original}"`));
+    }
+    console.log();
 
-    const spinner = ora({ text: 'Generating exercise...', color: 'cyan', indent: 2 }).start();
+    const spinner = ora({ text: 'Generating targeted exercise...', color: 'cyan', indent: 2 }).start();
     let exercise;
     try {
-      exercise = getMistakeExercise(type);
+      exercise = getMistakeExercise(card.rule);
       spinner.stop();
     } catch (err) {
       spinner.fail('Could not generate exercise.');
@@ -41,20 +51,23 @@ export async function runReview(stats) {
       continue;
     }
 
-    console.log(chalk.bold(`\n  ${exercise.exercise}\n`));
+    console.log(chalk.bold(`  ${exercise.exercise}\n`));
     const input = (await ask(rl, chalk.bold.green('  Your answer › '))).trim();
 
     const isCorrect = input.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
     if (isCorrect) {
-      console.log(chalk.green(`  ✔ Correct!\n`));
+      reviewSrsCard(card.rule, true);
+      console.log(chalk.green(`  ✔ Correct! Next review interval increased 📈\n`));
       stats.recordCorrect();
     } else {
+      reviewSrsCard(card.rule, false);
       console.log(chalk.red(`  ✖ The correct answer is: ${chalk.white(exercise.answer)}`));
-      console.log(chalk.gray(`  ${exercise.explanation}\n`));
-      stats.recordIncorrect(type);
+      console.log(chalk.gray(`  ${exercise.explanation}`));
+      console.log(chalk.yellow(`  ⚠️ Review interval reset to 1 day.\n`));
+      stats.recordIncorrect(card.rule);
     }
   }
 
   rl.close();
-  console.log(chalk.cyan('\n  Review complete!\n'));
+  console.log(chalk.bold.cyan('\n  🎉 SRS Review complete! Your memory intervals have been updated.\n'));
 }

@@ -6,7 +6,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '../../data');
 const HISTORY_FILE = join(DATA_DIR, 'history.json');
 
-const DEFAULT = { errors: [], sessions: [], streak: 0, bestStreak: 0 };
+const DEFAULT = {
+  errors: [],
+  srsCards: {}, // { [ruleName]: { rule, repetition, interval, nextReviewDate, easeFactor, count } }
+  sessions: [],
+  streak: 0,
+  bestStreak: 0
+};
 
 export function loadHistory() {
   if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
@@ -14,7 +20,13 @@ export function loadHistory() {
     writeFileSync(HISTORY_FILE, JSON.stringify(DEFAULT, null, 2));
     return structuredClone(DEFAULT);
   }
-  return JSON.parse(readFileSync(HISTORY_FILE, 'utf-8'));
+  try {
+    const data = JSON.parse(readFileSync(HISTORY_FILE, 'utf-8'));
+    if (!data.srsCards) data.srsCards = {};
+    return data;
+  } catch {
+    return structuredClone(DEFAULT);
+  }
 }
 
 export function saveHistory(data) {
@@ -23,8 +35,69 @@ export function saveHistory(data) {
 }
 
 export function recordError(errorType, original, corrected) {
+  if (!errorType) return;
   const data = loadHistory();
   data.errors.push({ type: errorType, original, corrected, timestamp: new Date().toISOString() });
+
+  // Update or insert into SRS cards
+  if (!data.srsCards[errorType]) {
+    data.srsCards[errorType] = {
+      rule: errorType,
+      repetition: 0,
+      interval: 1, // 1 day
+      easeFactor: 2.5,
+      count: 1,
+      lastMistake: { original, corrected },
+      nextReviewDate: new Date().toISOString() // due immediately
+    };
+  } else {
+    const card = data.srsCards[errorType];
+    card.count = (card.count || 1) + 1;
+    card.repetition = 0;
+    card.interval = 1;
+    card.lastMistake = { original, corrected };
+    card.nextReviewDate = new Date().toISOString(); // reset interval due to error
+  }
+
+  saveHistory(data);
+}
+
+export function getDueSrsCards() {
+  const data = loadHistory();
+  const now = new Date().toISOString();
+  const cards = Object.values(data.srsCards || {});
+
+  // Cards that are strictly due
+  const due = cards.filter((c) => c.nextReviewDate <= now);
+  if (due.length > 0) return due;
+
+  // If none strictly due, return most frequent errors
+  return cards.sort((a, b) => b.count - a.count).slice(0, 5);
+}
+
+export function reviewSrsCard(ruleName, isCorrect) {
+  const data = loadHistory();
+  const card = data.srsCards?.[ruleName];
+  if (!card) return;
+
+  if (isCorrect) {
+    card.repetition = (card.repetition || 0) + 1;
+    if (card.repetition === 1) {
+      card.interval = 1;
+    } else if (card.repetition === 2) {
+      card.interval = 3;
+    } else {
+      card.interval = Math.round(card.interval * (card.easeFactor || 2.5));
+    }
+  } else {
+    card.repetition = 0;
+    card.interval = 1;
+  }
+
+  const nextDate = new Date();
+  nextDate.setDate(nextDate.getDate() + card.interval);
+  card.nextReviewDate = nextDate.toISOString();
+
   saveHistory(data);
 }
 

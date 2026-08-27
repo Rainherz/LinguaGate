@@ -8,6 +8,8 @@ import { loadProgress } from './services/progress.js';
 import { SessionStats } from './services/stats.js';
 import { banner, printWordOfDay } from './ui/display.js';
 import { runPath } from './modes/path.js';
+import { runPlacementTest } from './modes/placement.js';
+import { runTimeAttack } from './modes/timeattack.js';
 import { runChat } from './modes/chat.js';
 import { runTranslate } from './modes/translate.js';
 import { runFillBlank } from './modes/fillblank.js';
@@ -15,10 +17,12 @@ import { runReview } from './modes/review.js';
 
 const MODES = {
   PATH: '🗺️  Learning Path (CEFR A1 ➔ C1)',
+  TIMEATTACK: '⚡ Time Attack (60s Rapid Fire)',
+  PLACEMENT: '🎓 Placement Test (Calibrate Level)',
   CHAT: '💬 Free Chat',
   TRANSLATE: '🌍 Translate (ES → EN)',
   FILLBLANK: '✏️  Fill in the Blank',
-  REVIEW: '🔄 Review My Mistakes',
+  REVIEW: '🧠 Review Mistakes (SRS / SM-2)',
 };
 
 async function getDifficulty() {
@@ -48,42 +52,54 @@ async function main() {
   // Stats & Progress Overview
   const history = loadHistory();
   const progress = loadProgress();
-  if (history.bestStreak > 0 || progress.xp > 0) {
-    console.log(chalk.yellow(`  🏆 Best streak: ${history.bestStreak} in a row | ⚡ XP: ${progress.xp} | 🎓 Lessons: ${progress.completedLessons.length} done\n`));
-  }
+  const srsDueCount = Object.values(history.srsCards || {}).filter(
+    (c) => c.nextReviewDate <= new Date().toISOString()
+  ).length;
+
+  console.log(
+    chalk.yellow(
+      `  🏆 Streak: ${history.bestStreak} | ⚡ XP: ${progress.xp} | 🎓 Lessons: ${progress.completedLessons.length} | 🧠 Due Cards: ${srsDueCount}\n`
+    )
+  );
 
   let playAgain = true;
   while (playAgain) {
     const modeKey = await select({
       message: 'Choose your mode:',
       choices: [
-        { name: MODES.PATH,      value: 'PATH' },
-        { name: MODES.CHAT,      value: 'CHAT' },
-        { name: MODES.TRANSLATE, value: 'TRANSLATE' },
-        { name: MODES.FILLBLANK, value: 'FILLBLANK' },
-        { name: MODES.REVIEW,    value: 'REVIEW' },
-        { name: '❌ Quit',       value: 'QUIT' },
+        { name: MODES.PATH,       value: 'PATH' },
+        { name: MODES.TIMEATTACK, value: 'TIMEATTACK' },
+        { name: MODES.REVIEW,     value: 'REVIEW' },
+        { name: MODES.PLACEMENT,  value: 'PLACEMENT' },
+        { name: MODES.CHAT,       value: 'CHAT' },
+        { name: MODES.TRANSLATE,  value: 'TRANSLATE' },
+        { name: MODES.FILLBLANK,  value: 'FILLBLANK' },
+        { name: '❌ Quit',        value: 'QUIT' },
       ],
     });
 
     if (modeKey === 'QUIT') break;
 
     let difficulty = 'beginner';
-    if (modeKey !== 'REVIEW' && modeKey !== 'PATH') {
+    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK'].includes(modeKey)) {
       difficulty = await getDifficulty();
     }
 
     console.log();
     const stats = new SessionStats(MODES[modeKey]);
 
-    if (modeKey === 'PATH')      await runPath(stats);
-    if (modeKey === 'CHAT')      await runChat(stats, difficulty);
-    if (modeKey === 'TRANSLATE') await runTranslate(stats, difficulty);
-    if (modeKey === 'FILLBLANK') await runFillBlank(stats, difficulty);
-    if (modeKey === 'REVIEW')    await runReview(stats);
+    if (modeKey === 'PATH')       await runPath(stats);
+    if (modeKey === 'TIMEATTACK') await runTimeAttack(stats);
+    if (modeKey === 'PLACEMENT')  await runPlacementTest();
+    if (modeKey === 'REVIEW')     await runReview(stats);
+    if (modeKey === 'CHAT')       await runChat(stats, difficulty);
+    if (modeKey === 'TRANSLATE')  await runTranslate(stats, difficulty);
+    if (modeKey === 'FILLBLANK')  await runFillBlank(stats, difficulty);
 
-    stats.print();
-    recordSession(stats.getSummary());
+    if (modeKey !== 'PLACEMENT') {
+      stats.print();
+      recordSession(stats.getSummary());
+    }
 
     playAgain = await confirm({ message: 'Play again?', default: true });
     console.log();

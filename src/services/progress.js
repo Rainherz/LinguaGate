@@ -53,3 +53,24 @@ export function isLessonUnlocked(lessonId, allLessons) {
   const prevLesson = allLessons[index - 1];
   return progress.completedLessons.includes(prevLesson.id);
 }
+
+export function unlockUpToLevel(levelId, allLessons) {
+  const progress = loadProgress();
+  const levelOrder = ['A1', 'A2', 'B1', 'B2', 'C1'];
+  const targetIdx = levelOrder.indexOf(levelId);
+  if (targetIdx <= 0) return progress;
+
+  // Find all lessons before this target level
+  for (const lesson of allLessons) {
+    const lessonLevelIdx = levelOrder.indexOf(lesson.unitLevel);
+    if (lessonLevelIdx < targetIdx && !progress.completedLessons.includes(lesson.id)) {
+      progress.completedLessons.push(lesson.id);
+      progress.xp += 50;
+    }
+  }
+
+  progress.placedLevel = levelId;
+  saveProgress(progress);
+  return progress;
+}
+

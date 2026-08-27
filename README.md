@@ -13,7 +13,7 @@ You write in English. LinguaGate checks your grammar before doing anything else.
 - ✅ **Correct** → the bot replies and your streak grows
 - ❌ **Wrong** → it shows every error, the corrected sentence, full grammar theory, and why — then asks you to try again
 
-Every mistake is saved locally so the **Review** mode knows exactly what to drill you on.
+Every mistake is converted into a **Spaced Repetition (SRS)** flashcard so the review system knows exactly when to test you again.
 
 ---
 
@@ -22,12 +22,12 @@ Every mistake is saved locally so the **Review** mode knows exactly what to dril
 | Mode | Description |
 |------|-------------|
 | 🗺️ **Learning Path** | CEFR structured curriculum (A1 ➔ C1) with progressive lesson unlocks & XP. |
-| 💬 **Free Chat** | Write anything. Grammar gate active. |
-| 🌍 **Translate** | Get a Spanish phrase, translate it to English with full grammar theory breakdowns. |
-| ✏️ **Fill in the Blank** | Complete sentences with the right word or preposition. |
-| 🔄 **Review My Mistakes** | Targeted exercises based on your personal most common errors. |
-
-All independent modes support **beginner / intermediate / advanced** difficulty.
+| ⚡ **Time Attack** | 60-second rapid fire grammar speed challenge with rankings. |
+| 🧠 **Review Mistakes (SRS)** | Spaced Repetition (SM-2 algorithm) testing cards due for retention. |
+| 🎓 **Placement Test** | Adaptive diagnostic test that calibrates your CEFR level and auto-unlocks units. |
+| 💬 **Free Chat** | Open conversational practice with active grammar gate. |
+| 🌍 **Translate** | Translate Spanish phrases to English with comprehensive grammar theory breakdowns. |
+| ✏️ **Fill in the Blank** | Complete sentences with the correct word, tense, or preposition. |
 
 ---
 
@@ -44,6 +44,9 @@ The Learning Path is structured into 5 progressive levels:
 
 ## Features
 
+- 🎓 **Adaptive Placement Test**: Calibrate directly to A2, B1, or B2 without repeating what you already know.
+- 🧠 **SuperMemo SM-2 SRS Engine**: Errors dynamically schedule intervals (1d ➔ 3d ➔ 7d ➔ 30d).
+- ⚡ **Time Attack Mode**: Test grammar reflexes under pressure with speed ranks.
 - 🗺️ **Duolingo-style Progression**: Unlock lessons in sequence as you pass exercises.
 - ⚡ **XP & Leveling**: Earn experience points per completed lesson.
 - 🔥 **Streak Counter**: Track consecutive correct answers and personal records.
@@ -69,32 +72,6 @@ git clone https://github.com/Rainherz/LinguaGate.git
 cd LinguaGate
 pnpm install
 pnpm start
-```
-
----
-
-## Project Structure
-
-```
-src/
-  index.js              # Entry point — mode selector & progress summary
-  curriculum.json       # CEFR curriculum syllabus (A1 to C1)
-  modes/
-    path.js             # CEFR Learning Path runner & ASCII map
-    chat.js             # Free chat mode
-    translate.js        # ES → EN translation exercises
-    fillblank.js        # Fill in the blank
-    review.js           # Mistake review mode
-  services/
-    agy.js              # agy AI subprocess calls & lesson generators
-    history.js          # Error tracking & streak persistence
-    progress.js         # XP & lesson unlock persistence
-    stats.js            # Live session analytics
-  ui/
-    display.js          # UI display helpers
-data/                   # User data (gitignored)
-  history.json
-  progress.json
 ```
 
 ---
