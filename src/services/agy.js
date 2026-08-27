@@ -71,18 +71,28 @@ Reply ONLY with a raw JSON object (no markdown, no code fences):
 }
 
 export function checkTranslation(original, userTranslation, correctTranslation) {
-  const prompt = `You are an English translation evaluator.
+  const prompt = `You are an English grammar teacher evaluating a translation.
 Original Spanish: "${original}"
 Correct English translation: "${correctTranslation}"
 User translation: "${userTranslation}"
 
 Evaluate the user translation. Minor wording differences are acceptable if the meaning is correct.
+For every error found, explain the GRAMMAR THEORY behind it — not just what is wrong, but WHY it is wrong.
+Include the rule name, how it works, and a second example to reinforce it.
+
 Reply ONLY with a raw JSON object (no markdown, no code fences):
   isCorrect: boolean — true if score >= 80
-  feedback: string — specific feedback on what was right or wrong
-  score: number — 0 to 100`;
+  score: number — 0 to 100
+  feedback: string — one sentence summary of the overall quality
+  errors: Array<{ wrong: string, correct: string, rule: string, theory: string, example: string }>
+    wrong: the exact word or phrase the user wrote
+    correct: what it should be
+    rule: the grammar rule name (e.g. "Third-person singular present tense")
+    theory: 2-3 sentence explanation of the rule from scratch, as if the user knows nothing
+    example: a second example sentence demonstrating the correct rule`;
   return JSON.parse(callAgy(prompt));
 }
+
 
 export function getWordOfDay() {
   const prompt = `Generate an interesting English word of the day for a Spanish speaker learning English.

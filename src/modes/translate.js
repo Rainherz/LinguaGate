@@ -53,13 +53,25 @@ export async function runTranslate(stats, difficulty) {
       stats.recordCorrect();
     } else {
       console.log(chalk.red(`  ✖ Not quite. Score: ${evaluation.score}/100`));
-      console.log(chalk.gray(`  ${evaluation.feedback}`));
-      console.log(chalk.gray(`  Correct answer: ${chalk.white(phrase.english)}`));
+      console.log(chalk.gray(`  ${evaluation.feedback}\n`));
+
+      if (evaluation.errors?.length > 0) {
+        for (const err of evaluation.errors) {
+          console.log(chalk.yellow(`  ❌ "${err.wrong}" → "${err.correct}"`));
+          console.log(chalk.bold.white(`     📖 ${err.rule}`));
+          console.log(chalk.gray(`     ${err.theory}`));
+          console.log(chalk.gray(`     e.g. "${err.example}"\n`));
+          recordError(err.rule, phrase.spanish, phrase.english);
+        }
+      } else {
+        console.log(chalk.gray(`  Correct answer: ${chalk.white(phrase.english)}`));
+      }
+
       updateStreak(false);
-      stats.recordIncorrect('translation error');
-      recordError('translation error', phrase.spanish, phrase.english);
+      stats.recordIncorrect(evaluation.errors?.[0]?.rule ?? 'translation error');
       console.log();
     }
+
 
     printDivider();
     const again = (await ask(rl, chalk.gray('  Next phrase? (y/n) › '))).trim().toLowerCase();
