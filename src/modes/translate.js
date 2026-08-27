@@ -46,14 +46,24 @@ export async function runTranslate(stats, difficulty) {
     }
 
     if (evaluation.isCorrect) {
-      console.log(chalk.green(`  ✔ Correct! Score: ${evaluation.score}/100`));
-      console.log(chalk.gray(`  ${evaluation.feedback}`));
+      if (evaluation.score === 100) {
+        console.log(chalk.bold.green(`  ✔ Perfect! (100/100)`));
+      } else {
+        console.log(chalk.green(`  ✔ Accepted! Score: ${evaluation.score}/100`));
+      }
+      if (evaluation.feedback) {
+        console.log(chalk.gray(`  💬 Feedback: ${evaluation.feedback}`));
+      }
+      console.log(chalk.cyan(`  🎯 Ideal Translation: `) + chalk.white(phrase.english) + '\n');
       const streak = updateStreak(true);
       printStreak(streak);
       stats.recordCorrect();
     } else {
-      console.log(chalk.red(`  ✖ Not quite. Score: ${evaluation.score}/100`));
-      console.log(chalk.gray(`  ${evaluation.feedback}\n`));
+      console.log(chalk.red(`  ✖ Needs improvement. Score: ${evaluation.score}/100`));
+      if (evaluation.feedback) {
+        console.log(chalk.gray(`  💬 Feedback: ${evaluation.feedback}\n`));
+      }
+      console.log(chalk.cyan(`  🎯 Expected Translation: `) + chalk.white(phrase.english) + '\n');
 
       if (evaluation.errors?.length > 0) {
         for (const err of evaluation.errors) {
@@ -63,14 +73,13 @@ export async function runTranslate(stats, difficulty) {
           console.log(chalk.gray(`     e.g. "${err.example}"\n`));
           recordError(err.rule, phrase.spanish, phrase.english);
         }
-      } else {
-        console.log(chalk.gray(`  Correct answer: ${chalk.white(phrase.english)}`));
       }
 
       updateStreak(false);
       stats.recordIncorrect(evaluation.errors?.[0]?.rule ?? 'translation error');
       console.log();
     }
+
 
 
     printDivider();

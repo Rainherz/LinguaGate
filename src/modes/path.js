@@ -95,12 +95,25 @@ async function runExercise(exerciseType, lesson, stats, rl) {
     }
 
     if (evaluation.isCorrect) {
-      console.log(chalk.green(`    ✔ Excellent! (${evaluation.score}/100)`));
+      if (evaluation.score === 100) {
+        console.log(chalk.bold.green(`    ✔ Perfect! (100/100)`));
+      } else {
+        console.log(chalk.green(`    ✔ Accepted! (${evaluation.score}/100)`));
+      }
+      if (evaluation.feedback) {
+        console.log(chalk.gray(`    💬 Feedback: ${evaluation.feedback}`));
+      }
+      console.log(chalk.cyan(`    🎯 Ideal Translation: `) + chalk.white(phrase.english) + '\n');
       updateStreak(true);
       stats.recordCorrect();
       return true;
     } else {
-      console.log(chalk.red(`    ✖ Not quite (${evaluation.score}/100)`));
+      console.log(chalk.red(`    ✖ Needs improvement (${evaluation.score}/100)`));
+      if (evaluation.feedback) {
+        console.log(chalk.gray(`    💬 Feedback: ${evaluation.feedback}\n`));
+      }
+      console.log(chalk.cyan(`    🎯 Expected Translation: `) + chalk.white(phrase.english) + '\n');
+
       if (evaluation.errors?.length > 0) {
         for (const err of evaluation.errors) {
           console.log(chalk.yellow(`    ❌ "${err.wrong}" → "${err.correct}"`));
@@ -109,8 +122,6 @@ async function runExercise(exerciseType, lesson, stats, rl) {
           console.log(chalk.gray(`       e.g. "${err.example}"\n`));
           recordError(err.rule, phrase.spanish, phrase.english);
         }
-      } else {
-        console.log(chalk.gray(`    Correct translation: ${chalk.white(phrase.english)}`));
       }
       updateStreak(false);
       stats.recordIncorrect(lesson.grammar);
