@@ -12,6 +12,8 @@ import {
   getLessonTheory
 } from '../services/agy.js';
 import { loadProgress, completeLesson, isLessonUnlocked } from '../services/progress.js';
+import { isCheckpointUnlocked, isLevelCertified, loadCheckpoint } from '../services/checkpoint.js';
+import { runCheckpointExam } from './checkpoint.js';
 import {
   clearScreen,
   printAppHeader,
@@ -42,13 +44,16 @@ function renderOverview(progress, allLessons) {
   let unitBadges = [];
   for (const unit of curriculum.units) {
     const unitLessons = unit.lessons;
-    const completedCount = unitLessons.filter((l) => progress.completedLessons.includes(l.id)).length;
+    const completedCount = unitLessons.filter((l) => progress.completedLessons?.includes(l.id)).length;
     const isUnlocked = isLessonUnlocked(unitLessons[0].id, allLessons);
+    const isCertified = isLevelCertified(unit.level, progress);
 
-    if (completedCount === unitLessons.length) {
-      unitBadges.push(chalk.green(`[${unit.level} ✓]`));
+    if (isCertified) {
+      unitBadges.push(chalk.bold.green(`[${unit.level} 🎖️ Certified]`));
+    } else if (completedCount === unitLessons.length) {
+      unitBadges.push(chalk.bold.yellow(`[${unit.level} ⚡ Exam Ready!]`));
     } else if (isUnlocked) {
-      unitBadges.push(chalk.bold.yellow(`[${unit.level} 📍 ${completedCount}/${unitLessons.length}]`));
+      unitBadges.push(chalk.cyan(`[${unit.level} 📍 ${completedCount}/${unitLessons.length}]`));
     } else {
       unitBadges.push(chalk.dim(`[${unit.level} 🔒]`));
     }
@@ -127,7 +132,6 @@ async function runExercise(exerciseType, lesson, stats, index, total) {
   return true;
 }
 
-
 async function executeSingleLesson(lesson, stats) {
   clearScreen();
   printAppHeader(`Lesson ${lesson.id}: ${lesson.title}`);
@@ -150,37 +154,31 @@ async function executeSingleLesson(lesson, stats) {
     printAppHeader(`Lesson ${lesson.id} • ${lesson.title}`);
 
     const exType = exercises[i];
-    let passed = false;
-    let attempts = 0;
-    while (!passed && attempts < 2) {
-      attempts++;
-      passed = await runExercise(exType, lesson, stats, i, exercises.length);
-      if (!passed && attempts < 2) {
-        console.log(chalk.yellow('  🔄 Let’s retry this exercise to reinforce the rule.\n'));
-      }
-    }
+    const isSuccess = await runExercise(exType, lesson, stats, i, exercises.length);
+    if (isSuccess) passedCount++;
 
-    if (passed) passedCount++;
     if (i < exercises.length - 1) {
-      await safeInput({ message: 'Press [ENTER] for next exercise ›' });
+      console.log();
+      await safeInput({ message: `${chalk.dim(`[Exercise ${i + 1}/${exercises.length} Complete] Press [ENTER] to continue ›`)}` });
     }
   }
 
   clearScreen();
-  printAppHeader(`Lesson ${lesson.id} Complete`);
+  printAppHeader(`Lesson Summary: ${lesson.id}`);
 
-  const passedThreshold = Math.ceil(exercises.length * 0.7);
+  const passedThreshold = Math.ceil(exercises.length * 0.6);
   const isPassed = passedCount >= passedThreshold;
 
   if (isPassed) {
-    const earnedXp = 50 + passedCount * 10;
-    completeLesson(lesson.id, earnedXp);
+    const xpReward = 50;
+    completeLesson(lesson.id, xpReward);
+
     console.log(
       boxen(
-        `${chalk.bold.green('🎉 LESSON PASSED!')}\n\n` +
-        `${chalk.white(`Score: ${passedCount}/${exercises.length} exercises`)}\n` +
-        `${chalk.yellow(`Earned: +${earnedXp} XP ⚡`)}\n\n` +
-        `${chalk.cyan('Next lesson is now unlocked!')}`,
+        `${chalk.bold.green('🎉 LESSON COMPLETE!')}\n\n` +
+        `${chalk.white(`Score: ${passedCount}/${exercises.length} exercises passed.`)}\n` +
+        `${chalk.yellow(`Reward: +${xpReward} XP ⚡`)}\n\n` +
+        `${chalk.cyan('Next lesson has been unlocked in your path!')}`,
         {
           padding: 1,
           margin: 1,
@@ -218,31 +216,59 @@ export async function runPath(stats) {
   renderOverview(progress, allLessons);
 
   const choices = [
-    { name: '🔙 Back to Main Menu (or press Esc)', value: 'BACK' },
-    ...allLessons.map((lesson) => {
-      const isCompleted = progress.completedLessons.includes(lesson.id);
+    { name: '🔙 Back to Main Menu (or press Esc)', value: 'BACK' }
+  ];
+
+  for (const unit of curriculum.units) {
+    for (const lesson of unit.lessons) {
+      const isCompleted = progress.completedLessons?.includes(lesson.id);
       const isUnlocked = isLessonUnlocked(lesson.id, allLessons);
 
       let prefix = '🔒';
       if (isCompleted) prefix = '✅';
       else if (isUnlocked) prefix = '📍';
 
-      return {
+      choices.push({
         name: `${prefix} [${lesson.id}] ${lesson.title} (${lesson.unitLevel})`,
         value: lesson.id,
         disabled: !isUnlocked ? '(Locked)' : false
-      };
-    })
-  ];
+      });
+    }
 
-  const chosenLessonId = await safeSelect({
-    message: 'Select a lesson to start (Esc to go back):',
+    // Add Checkpoint Option if level checkpoint exists
+    if (loadCheckpoint(unit.level)) {
+      const checkpointUnlocked = isCheckpointUnlocked(unit.level, progress, allLessons);
+      const isCertified = isLevelCertified(unit.level, progress);
+
+      const cpName = isCertified
+        ? `🎖️  [${unit.level} CHECKPOINT] Certification Exam (Passed ✓)`
+        : checkpointUnlocked
+        ? `⚡  [${unit.level} CHECKPOINT] 20-Question Certification Exam (Ready!)`
+        : `🔒  [${unit.level} CHECKPOINT] Certification Exam (Locked — Complete ${unit.level} units)`;
+
+      choices.push({
+        name: cpName,
+        value: `CHECKPOINT_${unit.level}`,
+        disabled: !checkpointUnlocked ? '(Locked)' : false
+      });
+    }
+  }
+
+  const chosenId = await safeSelect({
+    message: 'Select a lesson or Checkpoint Exam (Esc to go back):',
     choices
   });
 
-  if (!chosenLessonId || chosenLessonId === 'BACK') return;
+  if (!chosenId || chosenId === 'BACK') return;
 
-  let currentLesson = allLessons.find((l) => l.id === chosenLessonId);
+  // Handle Checkpoint Selection
+  if (chosenId.startsWith('CHECKPOINT_')) {
+    const level = chosenId.replace('CHECKPOINT_', '');
+    await runCheckpointExam(level, stats);
+    return;
+  }
+
+  let currentLesson = allLessons.find((l) => l.id === chosenId);
 
   while (currentLesson) {
     const isPassed = await executeSingleLesson(currentLesson, stats);
@@ -276,4 +302,3 @@ export async function runPath(stats) {
     }
   }
 }
-
