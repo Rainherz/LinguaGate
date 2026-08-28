@@ -1,4 +1,3 @@
-import readline from 'node:readline';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
@@ -6,7 +5,7 @@ import { playAudio, isAudioSupported } from '../services/audio.js';
 import { getListeningPhrase, evaluateListening } from '../services/agy.js';
 import { updateStreak, recordError } from '../services/history.js';
 import { clearScreen, printAppHeader, printStreak, printDivider } from '../ui/display.js';
-import { safeSelect, safeConfirm, ask } from '../ui/prompt.js';
+import { safeSelect, safeConfirm, safeInput } from '../ui/prompt.js';
 
 export async function runListening(stats) {
   clearScreen();
@@ -42,8 +41,6 @@ export async function runListening(stats) {
 
   if (!difficulty || difficulty === 'BACK') return;
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
   let challengeCount = 0;
   let running = true;
 
@@ -75,7 +72,7 @@ export async function runListening(stats) {
           `  Type what you heard and press ${chalk.bold.green('[ENTER]')}\n` +
           `  ${chalk.yellow('[r]')} Replay normal speed (1.0x)\n` +
           `  ${chalk.cyan('[s]')} Replay slow speed (0.7x)\n` +
-          `  ${chalk.magenta('[u]')} Replay ultra slow (0.4x - camera lenta)\n` +
+          `  ${chalk.magenta('[u]')} Replay ultra slow (0.4x - cámara lenta)\n` +
           `  ${chalk.red('/quit')} Exit to menu`,
           {
             padding: { top: 0, bottom: 0, left: 1, right: 1 },
@@ -87,7 +84,7 @@ export async function runListening(stats) {
         )
       );
 
-      const input = (await ask(rl, chalk.bold.green('  Your transcription › '))).trim();
+      const input = (await safeInput({ message: 'Your transcription ›' })).trim();
 
       if (!input) {
         console.log(chalk.yellow('\n  ⚠️ Escribí lo que escuchaste, o usá [r] / [s] / [u] para repetir el audio.\n'));
@@ -182,6 +179,4 @@ export async function runListening(stats) {
     const again = await safeConfirm({ message: 'Next audio challenge?', default: true });
     if (!again) running = false;
   }
-
-  rl.close();
 }
