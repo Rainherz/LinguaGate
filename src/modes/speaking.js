@@ -4,7 +4,7 @@ import ora from 'ora';
 import { isRecorderAvailable, startRecording } from '../services/recorder.js';
 import { evaluateSpeechMetrics, evaluateSpokenWithAI } from '../services/speech.js';
 import { updateStreak, recordError } from '../services/history.js';
-import { playAudio, playAudioSlow, playAudioUltraSlow } from '../services/audio.js';
+import { playAudio, playAudioSlow, playAudioUltraSlow, playAudioFile } from '../services/audio.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeSelect, safeConfirm, safeInput } from '../ui/prompt.js';
 
@@ -49,6 +49,7 @@ export async function runSpeakingLab(stats) {
       boxen(
         `${chalk.bold.white('Speech & Fluency Training:')}\n\n` +
         `  ${chalk.dim('• Hardware Status:')} ${micStatus}\n` +
+        `  ${chalk.dim('• Self-Playback:')}   [p] Play YOUR recorded voice anytime to self-assess 🎧\n` +
         `  ${chalk.dim('• Metrics Tracked:')}  WPM Speed, Word Accuracy, Fluency %, Filler Detection\n` +
         `  ${chalk.dim('• Audio Playback:')}  1.0x Normal, 0.7x Slow, 0.4x Phonetic Breakdown`,
         {
@@ -123,6 +124,7 @@ async function runPronounceWorkout(stats, hasMic) {
     // Recording phase
     let spokenText;
     let durationSec = 3.0;
+    let recordedPath = null;
 
     if (hasMic) {
       console.log(chalk.bold.yellow('\n  🎙️ Press Enter to START recording your voice:'));
@@ -136,7 +138,27 @@ async function runPronounceWorkout(stats, hasMic) {
 
       const result = await recorder.stop();
       durationSec = result.durationSec;
-      console.log(chalk.dim(`  Recorded ${durationSec}s of audio.`));
+      recordedPath = result.path;
+
+      console.log(chalk.bold.green(`\n  ✔ Audio recorded (${durationSec}s).`));
+      console.log(chalk.gray('  🎧 [p] Listen to YOUR recording | [r] Replay native audio | [Enter] Proceed\n'));
+
+      while (true) {
+        const playbackAction = (await safeInput({ message: 'Audio playback ([p] my voice / [r] native / Enter to continue) ›' })).trim().toLowerCase();
+        if (playbackAction === 'p') {
+          console.log(chalk.cyan('  ▶ Playing your recorded voice...'));
+          await playAudioFile(recordedPath);
+        } else if (playbackAction === 'r') {
+          console.log(chalk.yellow('  ▶ Playing native reference...'));
+          await playAudio(item.sentence);
+        } else if (playbackAction === 's') {
+          await playAudioSlow(item.sentence);
+        } else if (playbackAction === 'u') {
+          await playAudioUltraSlow(item.sentence);
+        } else {
+          break;
+        }
+      }
 
       spokenText = (await safeInput({
         message: 'Confirm what you spoke (or adjust transcript) ›',
@@ -178,6 +200,16 @@ async function runPronounceWorkout(stats, hasMic) {
         borderColor: metrics.accuracy.accuracyScore >= 80 ? 'green' : 'yellow'
       })
     );
+
+    if (recordedPath) {
+      console.log(chalk.gray('  🎧 Controls: [p] Replay your recording | [r] Replay native model | [Enter] Next\n'));
+      while (true) {
+        const postControl = (await safeInput({ message: 'Listen ([p] my voice / [r] native / Enter to finish) ›' })).trim().toLowerCase();
+        if (postControl === 'p') await playAudioFile(recordedPath);
+        else if (postControl === 'r') await playAudio(item.sentence);
+        else break;
+      }
+    }
 
     if (metrics.accuracy.accuracyScore >= 80) {
       updateStreak(true);
@@ -225,6 +257,7 @@ async function runSpokenQA(stats, hasMic) {
 
   let spokenText;
   let durationSec = 5.0;
+  let recordedPath = null;
 
   if (hasMic) {
     console.log(chalk.bold.yellow('  🎙️ Press Enter to START recording your response (Aim for 20-40 seconds):'));
@@ -238,6 +271,22 @@ async function runSpokenQA(stats, hasMic) {
 
     const result = await recorder.stop();
     durationSec = result.durationSec;
+    recordedPath = result.path;
+
+    console.log(chalk.bold.green(`\n  ✔ Audio recorded (${durationSec}s).`));
+    console.log(chalk.gray('  🎧 [p] Listen to YOUR response recording | [r] Replay question | [Enter] Proceed\n'));
+
+    while (true) {
+      const playbackAction = (await safeInput({ message: 'Playback ([p] my response / [r] question / Enter to continue) ›' })).trim().toLowerCase();
+      if (playbackAction === 'p') {
+        console.log(chalk.cyan('  ▶ Playing your recorded voice...'));
+        await playAudioFile(recordedPath);
+      } else if (playbackAction === 'r') {
+        await playAudio(prompt);
+      } else {
+        break;
+      }
+    }
 
     spokenText = (await safeInput({
       message: 'Summary/Transcript of your spoken response ›'
@@ -276,6 +325,14 @@ async function runSpokenQA(stats, hasMic) {
       borderColor: 'green'
     })
   );
+
+  if (recordedPath) {
+    while (true) {
+      const replayControl = (await safeInput({ message: 'Listen ([p] my response / Enter to return) ›' })).trim().toLowerCase();
+      if (replayControl === 'p') await playAudioFile(recordedPath);
+      else break;
+    }
+  }
 
   if (aiFeedback.isCorrect) {
     updateStreak(true);

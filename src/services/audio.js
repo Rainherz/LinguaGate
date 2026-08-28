@@ -132,3 +132,22 @@ export async function playAudioSlow(text) {
 export async function playAudioUltraSlow(text) {
   return playAudio(text, { speed: 'ultra-slow' });
 }
+
+/**
+ * Plays a local audio file directly (e.g. user's own recorded WAV).
+ * @param {string} filePath
+ * @returns {Promise<{ played: boolean, reason?: string }>}
+ */
+export async function playAudioFile(filePath) {
+  const player = detectPlayer();
+  if (!player) {
+    return { played: false, reason: 'No audio player detected.' };
+  }
+
+  return new Promise((resolve) => {
+    exec(`${player.cmd} ${player.args} "${filePath}"`, (err) => {
+      if (err) resolve({ played: false, reason: err.message });
+      else resolve({ played: true });
+    });
+  });
+}
