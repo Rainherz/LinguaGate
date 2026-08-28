@@ -20,6 +20,7 @@ Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetiti
 | Mode | Description |
 |------|-------------|
 | 🗺️ **Learning Path** | CEFR structured curriculum (A1 ➔ C1) with progressive lesson unlocks, micro-theory cheat sheets, and XP. |
+| 🎧 **Listening & Dictation** | Audio listening lab: plays native English voice through your speakers with speed controls (`[r]` normal, `[s]` slow) and phonetic IPA breakdowns. |
 | 🎭 **Roleplay Missions** | Real-world interactive scenarios (NYC Coffee Shop, Tech Standup, Airport Customs, Hotel) with live objective tracking. |
 | 💬 **Phrasal Verbs & Slang** | Master native idiomatic expressions (Tech/Workplace, Daily Slang, Business) with situational quizzes. |
 | ⚡ **Time Attack** | 60-second rapid fire grammar speed challenge with rankings. |
@@ -43,6 +44,7 @@ Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetiti
 
 ## Features
 
+- 🎧 **Native Audio Listening Lab**: Zero-config audio playback via `mpg123`/`ffplay` with local disk caching and phonetic insights.
 - 🎭 **Interactive Objective-Driven Roleplay**: Scenarios evaluate grammar + checklist goals in real time.
 - 💬 **Idiomatic English Vault**: Phrasal verbs explained by real meaning vs literal traps.
 - 🎓 **Adaptive Placement Test**: Calibrate directly to your real level (A2, B1, B2) without repeating what you already know.
@@ -62,6 +64,7 @@ Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetiti
 - [Node.js](https://nodejs.org) 18+
 - [pnpm](https://pnpm.io)
 - [Antigravity CLI](https://antigravity.dev) (`agy`) installed and authenticated
+- `mpg123` or `ffplay` (for native audio playback)
 
 ---
 

@@ -250,3 +250,39 @@ Reply ONLY with a raw JSON object (no markdown, no code fences):
   }>`;
   return JSON.parse(callAgy(prompt));
 }
+
+export function getListeningPhrase(difficulty = 'beginner') {
+  const seed = Math.floor(Math.random() * 10000);
+  const prompt = `Generate a realistic English sentence for a Listening & Dictation audio exercise.
+Difficulty: ${difficulty}
+- beginner: 4-7 words, clear vocabulary, basic connected speech.
+- intermediate: 8-13 words, natural speed, phrasal verbs, contractions (wanna, gonna, should've).
+- advanced: 12-18 words, idioms, fast connected speech, nuanced phonetics.
+Seed: ${seed}
+
+Reply ONLY with a raw JSON object (no markdown, no code fences):
+  phrase: string (the spoken English sentence)
+  translation: string (Spanish translation)
+  phoneticIpa: string (IPA transcription, e.g. /aɪ wɒnt tə ɡəʊ/)
+  listeningTip: string (a tip about connected speech or pronunciation in this sentence, in Spanish)`;
+  return JSON.parse(callAgy(prompt));
+}
+
+export function evaluateListening(original, transcription) {
+  const prompt = `You are an English phonetics and listening comprehension tutor.
+Original spoken sentence: "${original}"
+Student's transcription: "${transcription}"
+
+Evaluate the student's dictation accuracy.
+Identify:
+1. Exact match vs missed words.
+2. Connected speech / phonetics explanation: why did the student mishear those specific sounds? (e.g. linking words, silent letters, schwa reduction, elision).
+
+Reply ONLY with a raw JSON object (no markdown, no code fences):
+  isCorrect: boolean (true if match >= 85%)
+  score: number (0-100)
+  missedWords: string[] (words missed or misheard)
+  phoneticInsight: string (explanation of the listening challenge in Spanish)
+  feedback: string (brief encouraging summary)`;
+  return JSON.parse(callAgy(prompt));
+}
