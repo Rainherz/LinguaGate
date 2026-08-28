@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import boxen from 'boxen';
 import { loadConfig, updateConfig, resetConfig } from '../services/config.js';
+import { renderTerminalHeatmap, formatDailyGoalBar } from '../services/activity.js';
 import { clearScreen, printAppHeader } from '../ui/display.js';
 import { safeSelect, safeInput, safeConfirm } from '../ui/prompt.js';
 
@@ -14,6 +15,7 @@ export async function runSettings() {
     const summaryText =
       `${chalk.bold.white('Current Configuration:')}\n\n` +
       `  ${chalk.dim('• User Name:')}          ${chalk.cyan(config.userName)}\n` +
+      `  ${chalk.dim('• Daily XP Goal:')}       ${chalk.green(config.dailyGoalXp + ' XP')}\n` +
       `  ${chalk.dim('• Default Audio Speed:')} ${chalk.yellow(config.audioSpeed)}\n` +
       `  ${chalk.dim('• Audio Engine:')}        ${chalk.green(config.audioPlayer)}\n` +
       `  ${chalk.dim('• Default Difficulty:')}  ${chalk.magenta(config.defaultDifficulty)}\n` +
@@ -33,9 +35,11 @@ export async function runSettings() {
       message: 'Select an option to customize (Esc to return):',
       choices: [
         { name: '🔙 Back to Main Menu (or press Esc)', value: 'BACK' },
+        { name: '📅 View 30-Day Activity Heatmap', value: 'HEATMAP' },
+        { name: `🎯 Change Daily XP Goal (${config.dailyGoalXp} XP)`, value: 'GOAL' },
         { name: `🔊 Change Default Audio Speed (${config.audioSpeed})`, value: 'SPEED' },
         { name: `🎧 Change Audio Engine / Mute (${config.audioPlayer})`, value: 'ENGINE' },
-        { name: `🎯 Change Default Difficulty (${config.defaultDifficulty})`, value: 'DIFFICULTY' },
+        { name: `🎓 Change Default Difficulty (${config.defaultDifficulty})`, value: 'DIFFICULTY' },
         { name: `👤 Edit User Name (${config.userName})`, value: 'NAME' },
         { name: '🔄 Reset All Settings to Defaults', value: 'RESET' }
       ]
@@ -43,6 +47,38 @@ export async function runSettings() {
 
     if (!action || action === 'BACK') {
       break;
+    }
+
+    if (action === 'HEATMAP') {
+      clearScreen();
+      printAppHeader('Your 30-Day Learning Activity');
+      console.log(formatDailyGoalBar(config.dailyGoalXp) + '\n');
+      console.log(
+        boxen(renderTerminalHeatmap(28), {
+          padding: 1,
+          margin: 1,
+          borderColor: 'green',
+          borderStyle: 'round'
+        })
+      );
+      await safeConfirm({ message: 'Return to Settings?', default: true });
+      continue;
+    }
+
+    if (action === 'GOAL') {
+      const goalChoice = await safeSelect({
+        message: 'Select your daily study target:',
+        choices: [
+          { name: '🌱 Casual (30 XP / ~1-2 exercises per day)', value: 30 },
+          { name: '🔥 Regular (50 XP / ~1 complete lesson per day)', value: 50 },
+          { name: '⚡ Serious (100 XP / ~2 lessons or extensive gym drills)', value: 100 },
+          { name: '🚀 Super Learner (150 XP / daily mastery immersion)', value: 150 },
+          { name: '🔙 Cancel', value: 0 }
+        ]
+      });
+      if (goalChoice && typeof goalChoice === 'number' && goalChoice > 0) {
+        updateConfig({ dailyGoalXp: goalChoice });
+      }
     }
 
     if (action === 'SPEED') {

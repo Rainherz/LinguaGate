@@ -12,6 +12,7 @@ function getConfigFilePath() {
  * @property {'auto' | 'ffplay' | 'mpg123' | 'aplay' | 'muted'} audioPlayer
  * @property {'beginner' | 'intermediate' | 'advanced'} defaultDifficulty
  * @property {boolean} soundEffects
+ * @property {number} dailyGoalXp
  */
 
 /** @type {UserConfig} */
@@ -20,7 +21,8 @@ export const DEFAULT_CONFIG = {
   audioSpeed: 'normal',
   audioPlayer: 'auto',
   defaultDifficulty: 'beginner',
-  soundEffects: true
+  soundEffects: true,
+  dailyGoalXp: 50
 };
 
 /**

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { readJson, writeJsonAtomic, getDataDir } from './storage.js';
+import { recordDailyActivity } from './activity.js';
 
 function getHistoryFilePath() {
   return join(getDataDir(), 'history.json');
@@ -10,7 +11,8 @@ const DEFAULT = {
   srsCards: {}, // { [ruleName]: { rule, repetition, interval, nextReviewDate, easeFactor, count } }
   sessions: [],
   streak: 0,
-  bestStreak: 0
+  bestStreak: 0,
+  dailyActivity: {}
 };
 
 export function loadHistory() {
@@ -18,6 +20,7 @@ export function loadHistory() {
   if (!data.srsCards) data.srsCards = {};
   if (!Array.isArray(data.errors)) data.errors = [];
   if (!Array.isArray(data.sessions)) data.sessions = [];
+  if (!data.dailyActivity) data.dailyActivity = {};
   return data;
 }
 
@@ -96,6 +99,8 @@ export function recordSession(stats) {
   const data = loadHistory();
   data.sessions.push({ ...stats, date: new Date().toISOString() });
   saveHistory(data);
+  const earnedXp = (stats.correct || 0) * 10;
+  recordDailyActivity(earnedXp, 0);
 }
 
 export function getTopErrors(n = 3) {

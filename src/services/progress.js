@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { readJson, writeJsonAtomic, getDataDir } from './storage.js';
+import { recordDailyActivity } from './activity.js';
 
 function getProgressFilePath() {
   return join(getDataDir(), 'progress.json');
@@ -36,6 +37,7 @@ export function completeLesson(lessonId, earnedXp = 50) {
     earnedXp
   });
   saveProgress(progress);
+  recordDailyActivity(earnedXp, 1);
   return progress;
 }
 

@@ -5,6 +5,8 @@ import { safeSelect, safeConfirm } from './ui/prompt.js';
 import { getWordOfDay } from './services/agy.js';
 import { loadHistory, recordSession } from './services/history.js';
 import { loadProgress } from './services/progress.js';
+import { loadConfig } from './services/config.js';
+import { formatDailyGoalBar } from './services/activity.js';
 import { SessionStats } from './services/stats.js';
 import { banner, printWordOfDay } from './ui/display.js';
 import { runPath } from './modes/path.js';
@@ -18,6 +20,7 @@ import { runFillBlank } from './modes/fillblank.js';
 import { runReview } from './modes/review.js';
 import { runListening } from './modes/listening.js';
 import { runVerbsGym } from './modes/verbs.js';
+import { runCollocationsGym } from './modes/collocations.js';
 import { runExportMode } from './modes/export.js';
 import { runSettings } from './modes/settings.js';
 
@@ -25,6 +28,7 @@ const MODES = {
   PATH: '🗺️  Learning Path (CEFR A1 ➔ C1)',
   LISTEN: '🎧 Listening & Dictation Lab',
   VERBS: '⚡ Irregular Verbs Gym (3 Forms)',
+  COLLOCATIONS: '🧩 Prepositions & Collocations Gym',
   ROLEPLAY: '🎭 Roleplay Missions (Real Scenarios)',
   SLANG: '💬 Phrasal Verbs & Slang Vault',
   TIMEATTACK: '⚡ Time Attack (60s Rapid Fire)',
@@ -65,34 +69,37 @@ async function main() {
   // Stats & Progress Overview
   const history = loadHistory();
   const progress = loadProgress();
+  const config = loadConfig();
   const srsDueCount = Object.values(history.srsCards || {}).filter(
     (c) => c.nextReviewDate <= new Date().toISOString()
   ).length;
 
   console.log(
     chalk.yellow(
-      `  🏆 Streak: ${history.bestStreak} | ⚡ XP: ${progress.xp} | 🎓 Lessons: ${progress.completedLessons.length} | 🧠 Due Cards: ${srsDueCount}\n`
+      `  🏆 Streak: ${history.bestStreak} | ⚡ XP: ${progress.xp} | 🎓 Lessons: ${progress.completedLessons.length} | 🧠 Due Cards: ${srsDueCount}`
     )
   );
+  console.log(`  ${formatDailyGoalBar(config.dailyGoalXp)}\n`);
 
   let playAgain = true;
   while (playAgain) {
     const modeKey = await safeSelect({
       message: 'Choose your mode (Esc to quit):',
       choices: [
-        { name: MODES.PATH,       value: 'PATH' },
-        { name: MODES.LISTEN,     value: 'LISTEN' },
-        { name: MODES.VERBS,      value: 'VERBS' },
-        { name: MODES.ROLEPLAY,   value: 'ROLEPLAY' },
-        { name: MODES.SLANG,      value: 'SLANG' },
-        { name: MODES.TIMEATTACK, value: 'TIMEATTACK' },
-        { name: MODES.REVIEW,     value: 'REVIEW' },
-        { name: MODES.PLACEMENT,  value: 'PLACEMENT' },
-        { name: MODES.EXPORT,     value: 'EXPORT' },
-        { name: MODES.SETTINGS,   value: 'SETTINGS' },
-        { name: MODES.CHAT,       value: 'CHAT' },
-        { name: MODES.TRANSLATE,  value: 'TRANSLATE' },
-        { name: MODES.FILLBLANK,  value: 'FILLBLANK' },
+        { name: MODES.PATH,         value: 'PATH' },
+        { name: MODES.LISTEN,       value: 'LISTEN' },
+        { name: MODES.VERBS,        value: 'VERBS' },
+        { name: MODES.COLLOCATIONS, value: 'COLLOCATIONS' },
+        { name: MODES.ROLEPLAY,     value: 'ROLEPLAY' },
+        { name: MODES.SLANG,        value: 'SLANG' },
+        { name: MODES.TIMEATTACK,   value: 'TIMEATTACK' },
+        { name: MODES.REVIEW,       value: 'REVIEW' },
+        { name: MODES.PLACEMENT,    value: 'PLACEMENT' },
+        { name: MODES.EXPORT,       value: 'EXPORT' },
+        { name: MODES.SETTINGS,     value: 'SETTINGS' },
+        { name: MODES.CHAT,         value: 'CHAT' },
+        { name: MODES.TRANSLATE,    value: 'TRANSLATE' },
+        { name: MODES.FILLBLANK,    value: 'FILLBLANK' },
         { name: '❌ Quit (or press Esc)', value: 'QUIT' },
       ],
     });
@@ -100,7 +107,7 @@ async function main() {
     if (!modeKey || modeKey === 'QUIT' || modeKey === 'BACK') break;
 
     let difficulty = 'beginner';
-    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK', 'ROLEPLAY', 'SLANG', 'LISTEN', 'VERBS', 'EXPORT', 'SETTINGS'].includes(modeKey)) {
+    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK', 'ROLEPLAY', 'SLANG', 'LISTEN', 'VERBS', 'COLLOCATIONS', 'EXPORT', 'SETTINGS'].includes(modeKey)) {
       difficulty = await getDifficulty();
       if (!difficulty || difficulty === 'BACK') {
         banner();
@@ -111,19 +118,20 @@ async function main() {
     console.log();
     const stats = new SessionStats(MODES[modeKey]);
 
-    if (modeKey === 'PATH')       await runPath(stats);
-    if (modeKey === 'LISTEN')     await runListening(stats);
-    if (modeKey === 'VERBS')      await runVerbsGym(stats);
-    if (modeKey === 'ROLEPLAY')   await runRoleplay(stats);
-    if (modeKey === 'SLANG')      await runSlang(stats);
-    if (modeKey === 'TIMEATTACK') await runTimeAttack(stats);
-    if (modeKey === 'PLACEMENT')  await runPlacementTest();
-    if (modeKey === 'REVIEW')     await runReview(stats);
-    if (modeKey === 'EXPORT')     await runExportMode();
-    if (modeKey === 'SETTINGS')   await runSettings();
-    if (modeKey === 'CHAT')       await runChat(stats);
-    if (modeKey === 'TRANSLATE')  await runTranslate(stats, difficulty);
-    if (modeKey === 'FILLBLANK')  await runFillBlank(stats, difficulty);
+    if (modeKey === 'PATH')         await runPath(stats);
+    if (modeKey === 'LISTEN')       await runListening(stats);
+    if (modeKey === 'VERBS')        await runVerbsGym(stats);
+    if (modeKey === 'COLLOCATIONS') await runCollocationsGym(stats);
+    if (modeKey === 'ROLEPLAY')     await runRoleplay(stats);
+    if (modeKey === 'SLANG')        await runSlang(stats);
+    if (modeKey === 'TIMEATTACK')   await runTimeAttack(stats);
+    if (modeKey === 'PLACEMENT')    await runPlacementTest();
+    if (modeKey === 'REVIEW')       await runReview(stats);
+    if (modeKey === 'EXPORT')       await runExportMode();
+    if (modeKey === 'SETTINGS')     await runSettings();
+    if (modeKey === 'CHAT')         await runChat(stats);
+    if (modeKey === 'TRANSLATE')    await runTranslate(stats, difficulty);
+    if (modeKey === 'FILLBLANK')    await runFillBlank(stats, difficulty);
 
     if (modeKey !== 'PLACEMENT' && modeKey !== 'EXPORT' && modeKey !== 'SETTINGS') {
       stats.print();

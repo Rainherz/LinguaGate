@@ -22,12 +22,14 @@ Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetiti
 | 🗺️ **Learning Path** | CEFR structured curriculum (A1 ➔ C1) with progressive lesson unlocks, micro-theory cheat sheets, and XP. |
 | 🎧 **Listening & Dictation** | Audio listening lab: plays native English voice with speed controls (`[r]` 1.0x, `[s]` 0.7x, `[u]` 0.4x ultra slow) and phonetic IPA breakdowns. |
 | ⚡ **Irregular Verbs Gym** | Master the 3 verb forms (*Infinitive ➔ Past Simple ➔ Past Participle*) categorized by CEFR level and phonetic patterns. |
+| 🧩 **Prepositions & Collocations** | Target the #1 source of learner mistakes (*depend on*, *good at*, *make a decision*, *interested in*). |
 | 🎭 **Roleplay Missions** | Real-world interactive scenarios (NYC Coffee Shop, Tech Standup, Airport Customs, Hotel) with live objective tracking. |
 | 💬 **Phrasal Verbs & Slang** | Master native idiomatic expressions (Tech/Workplace, Daily Slang, Business) with situational quizzes. |
 | ⚡ **Time Attack** | 60-second rapid fire grammar speed challenge with rankings. |
 | 🧠 **Review Mistakes (SRS)** | SuperMemo SM-2 spaced repetition cards targeting grammar patterns due for retention. |
 | 🎓 **Placement Test** | Adaptive diagnostic test that calibrates your CEFR level and auto-unlocks units. |
 | 📦 **Export to Anki / Notebook**| Export all your SRS cards and irregular verbs to Anki `.csv` or personal Markdown study notebooks. |
+| ⚙️ **Settings & Preferences** | Customize daily XP targets, default audio engine/speed, and view 30-day activity heatmaps. |
 | 💬 **Free Chat** | Open conversational practice with active grammar gate. |
 | 🌍 **Translate** | Translate Spanish phrases to English with comprehensive grammar theory breakdowns. |
 | ✏️ **Fill in the Blank** | Complete sentences with the correct word, tense, or preposition. |
@@ -46,7 +48,9 @@ Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetiti
 
 ## Features
 
-- 🎧 **Native Audio Listening Lab**: Zero-config audio playback via `ffplay`/`mpg123` with chained digital audio filters for real 0.4x slow motion.
+- 🎧 **Native Audio Across All Modes**: Zero-config audio playback via `ffplay`/`mpg123` with chained digital audio filters for real 0.4x slow motion and one-click pronunciation `[a]`.
+- 📅 **GitHub-Style Terminal Heatmap**: 30-day visual activity grid tracking daily study consistency and XP goals.
+- 🧩 **Collocations & False Friend Traps**: Focus on dependent prepositions and *Make vs Do* combinations.
 - ⚡ **Irregular Verbs Workout**: 50+ high-frequency verbs organized into phonetic pattern families (*i-a-u*, *ought/aught*, *o-o-en*).
 - 📦 **One-Click Anki Sync**: Export all mistakes and verbs directly into Anki Mobile / Desktop (`export/anki_deck.csv`).
 - 🎭 **Interactive Objective-Driven Roleplay**: Scenarios evaluate grammar + checklist goals in real time.
@@ -59,7 +63,7 @@ Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetiti
 - 📖 **Grammar Theory Engine**: Deep explanations of grammar rules on mistake.
 - ✨ **Word of the Day**: High-frequency vocabulary presented on startup.
 - 📊 **Session Summary**: Score, duration, accuracy %, and top mistake categories.
-- 💾 **Persistent Progress**: Saved in `data/progress.json` and `data/history.json`.
+- 💾 **Persistent & Atomic Storage**: Auto-recovering storage in `data/` with `.bak` backups.
 
 ---
 
@@ -72,13 +76,16 @@ Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetiti
 
 ---
 
-## Setup
+## Global Installation & Usage
+
+Run directly from any directory:
 
 ```bash
-git clone https://github.com/Rainherz/LinguaGate.git
-cd LinguaGate
-pnpm install
-pnpm start
+# In the repository:
+pnpm add -g .
+
+# Anywhere in your terminal:
+lingua
 ```
 
 ---

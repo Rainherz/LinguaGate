@@ -30,7 +30,8 @@ describe('Config Service (User Preferences & Settings)', () => {
       audioSpeed: 'slow',
       audioPlayer: 'ffplay',
       defaultDifficulty: 'advanced',
-      soundEffects: false
+      soundEffects: false,
+      dailyGoalXp: 100
     };
 
     saveConfig(custom);
