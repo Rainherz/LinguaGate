@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import ora from 'ora';
 import chalk from 'chalk';
 import { safeSelect, safeConfirm } from './ui/prompt.js';
