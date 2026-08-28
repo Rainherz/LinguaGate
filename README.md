@@ -8,7 +8,7 @@
 [![pnpm Version](https://img.shields.io/badge/pnpm-%3E%3D11.0.0-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io)
 [![CEFR Level](https://img.shields.io/badge/CEFR-A1%20%E2%9E%94%20C1-blue?style=flat-square)](https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)
 [![Algorithm](https://img.shields.io/badge/SRS-SuperMemo%20SM--2-orange?style=flat-square)](https://en.wikipedia.org/wiki/SuperMemo)
-[![Tests](https://img.shields.io/badge/Tests-152%2F152%20Passing-brightgreen?style=flat-square)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-163%2F163%20Passing-brightgreen?style=flat-square)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 *Master real-world English directly from your terminal. Built for developers preparing for international remote jobs in USD.*
@@ -44,7 +44,7 @@ flowchart LR
 1. **Active Grammar Gate**: You cannot progress by guessing. Every response is verified for tense harmony, subject-verb agreement, and prepositions.
 2. **Speaking Lab with Local Speech-to-Text**: Real microphone capture transcribed on your own machine by whisper.cpp — measured WPM, word-level precision against the target, filler detection, and an articulation diagnosis that crosses per-word acoustic confidence with the target diff to separate confident substitutions from mumbling. The AI examiner is fed that evidence and constrained to it.
 3. **Personalized Tech Mock Interview Simulator**: Tailor-made 4-round technical interviews for your exact role, tech stack, and seniority with official Hiring Committee verdicts.
-4. **SuperMemo SM-2 Spaced Repetition**: Mistakes are automatically converted into targeted flashcards with dynamic retention intervals (`1d ➔ 3d ➔ 7d ➔ 30d`).
+4. **SuperMemo SM-2 Spaced Repetition**: Mistakes are automatically converted into targeted flashcards with dynamic retention intervals (`1d ➔ 3d ➔ 7d ➔ 30d`) — grammar rules *and* individual mispronounced phrases, each on its own schedule.
 5. **30-Day Activity Heatmap & Daily Goals**: Track daily XP progress with GitHub-style ANSI terminal heatmaps.
 6. **Offline First & Atomic Storage**: Local JSON database with automatic `.bak` snapshotting and instant recovery.
 
@@ -64,7 +64,7 @@ flowchart LR
 | **🎭 Roleplay Missions** | `Scenarios` | Real-world goal-oriented simulations (Brooklyn Coffee Shop, Tech Standup, Airport Customs, Hotel Check-in) with real-time objective tracking. |
 | **💬 Phrasal Verbs & Slang** | `Native Vault` | Real idiomatic English categorized into Tech/Workplace, Daily Slang, and Business with literal-trap explanations. |
 | **⚡ Time Attack** | `60s Sprint` | Rapid-fire grammar challenge under pressure with accuracy and speed rankings. |
-| **🧠 Review Mistakes (SRS)** | `SM-2 Cards` | Review flashcards scheduled by the retention engine with theory recaps and hints. |
+| **🧠 Review Mistakes (SRS)** | `SM-2 Cards` | Review flashcards scheduled by the retention engine. Grammar cards are answered by typing; pronunciation cards are answered by **speaking**, and verified with the same speech-to-text that created them. |
 | **🎓 Placement Test** | `Diagnostic` | 6-question adaptive diagnostic quiz that auto-calibrates your CEFR level and auto-unlocks previous units. |
 | **📦 Export to Anki & Notebook** | `Sync Deck` | One-click export to Anki `.csv` (`export/anki_deck.csv`) and Markdown study notebook (`export/my_grammar_notebook.md`). |
 | **⚙️ Settings & Heatmap** | `Preferences` | Configure daily XP targets, default audio engine, and view your 30-day GitHub-style terminal heatmap. |
@@ -194,6 +194,19 @@ curl -LO https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.
 ```
 
 LinguaGate auto-detects the binary and model. Override with `sttEngine` / `sttModel` in your config, or set `sttEngine: "off"` to stay in self-reported mode.
+
+### Mispronunciations become flashcards
+
+Every measured substitution span is filed as its own SM-2 card, carrying the target phrase, what actually came out, and the recognizer's confidence:
+
+```text
+🎙️  Pronunciation: "prioritize"
+      target : prioritize
+      spoken : pre-write the sign,   (0.97)
+      interval: 1d
+```
+
+Reviewing one does **not** ask you to type it — that would prove nothing about pronunciation. It replays the native model, records you again, transcribes, and only advances the interval when the diff comes back clean. The measurement that created the card is the measurement that clears it.
 
 ---
 

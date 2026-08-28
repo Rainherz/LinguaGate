@@ -8,7 +8,7 @@ function getHistoryFilePath() {
 
 const DEFAULT = {
   errors: [],
-  srsCards: {}, // { [ruleName]: { rule, repetition, interval, nextReviewDate, easeFactor, count } }
+  srsCards: {}, // { [key]: { rule, kind, repetition, interval, nextReviewDate, easeFactor, count } }
   sessions: [],
   streak: 0,
   bestStreak: 0,
@@ -51,6 +51,93 @@ export function recordError(errorType, original, corrected) {
     card.interval = 1;
     card.lastMistake = { original, corrected };
     card.nextReviewDate = new Date().toISOString(); // reset interval due to error
+  }
+
+  saveHistory(data);
+}
+
+/**
+ * Namespaced key for a pronunciation card.
+ *
+ * Speaking failures used to be filed under the single literal 'Speaking
+ * Accuracy', so every mispronounced phrase a learner ever produced collapsed
+ * into one card. Keying by the target phrase gives each one its own SM-2
+ * schedule. The prefix keeps it from colliding with a grammar rule that
+ * happens to share the name.
+ * @param {string} target
+ * @returns {string}
+ */
+export function pronunciationCardKey(target) {
+  const normalized = String(target ?? '')
+    .toLowerCase()
+    .replace(/[.,/#!$%^&*;:{}=_`~()?"']/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return `pronunciation:${normalized}`;
+}
+
+/**
+ * Cards written before pronunciation cards existed carry no `kind`.
+ * @param {{ kind?: string } | null} card
+ * @returns {'grammar' | 'pronunciation'}
+ */
+export function getCardKind(card) {
+  return card?.kind === 'pronunciation' ? 'pronunciation' : 'grammar';
+}
+
+/**
+ * Storage key for a card, regardless of kind. Grammar cards are keyed by their
+ * rule name; pronunciation cards by their normalized target phrase.
+ * @param {{ kind?: string, rule?: string, target?: string }} card
+ * @returns {string|undefined}
+ */
+export function srsCardKey(card) {
+  return getCardKind(card) === 'pronunciation'
+    ? pronunciationCardKey(card.target)
+    : card?.rule;
+}
+
+/**
+ * Files one measured substitution span as its own SM-2 card.
+ * @param {{ target: string, spoken: string, confidence?: number|null }} span
+ */
+export function recordPronunciationError(span) {
+  const target = String(span?.target ?? '').trim();
+  if (!target) return;
+
+  const spoken = String(span?.spoken ?? '').trim();
+  const confidence = typeof span?.confidence === 'number' ? span.confidence : null;
+  const key = pronunciationCardKey(target);
+
+  const data = loadHistory();
+  data.errors.push({
+    type: key,
+    original: target,
+    corrected: spoken,
+    timestamp: new Date().toISOString()
+  });
+
+  const existing = data.srsCards[key];
+  if (!existing) {
+    data.srsCards[key] = {
+      rule: `Pronunciation: "${target}"`,
+      kind: 'pronunciation',
+      target,
+      lastSpoken: spoken,
+      confidence,
+      repetition: 0,
+      interval: 1,
+      easeFactor: 2.5,
+      count: 1,
+      nextReviewDate: new Date().toISOString()
+    };
+  } else {
+    existing.count = (existing.count || 1) + 1;
+    existing.repetition = 0;
+    existing.interval = 1;
+    existing.lastSpoken = spoken;
+    existing.confidence = confidence;
+    existing.nextReviewDate = new Date().toISOString();
   }
 
   saveHistory(data);

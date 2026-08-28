@@ -4,7 +4,7 @@ import ora from 'ora';
 import { isRecorderAvailable, startRecording } from '../services/recorder.js';
 import { evaluateSpeechMetrics, evaluateSpokenWithAI, diffSpokenWords, diagnoseArticulation } from '../services/speech.js';
 import { isTranscriptionAvailable, transcribeAudio } from '../services/transcriber.js';
-import { updateStreak, recordError } from '../services/history.js';
+import { updateStreak, recordError, recordPronunciationError } from '../services/history.js';
 import { playAudio, playAudioSlow, playAudioUltraSlow, playAudioFile } from '../services/audio.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeSelect, safeConfirm, safeInput } from '../ui/prompt.js';
@@ -393,7 +393,25 @@ async function runPronounceWorkout(stats, hasMic) {
     } else {
       updateStreak(false);
       stats.recordIncorrect('Phonetics / Word Stress');
-      recordError('Speaking Accuracy', item.sentence, spokenText);
+
+      // File each measured substitution as its own SM-2 card. Filing them all
+      // under one 'Speaking Accuracy' bucket meant every phrase a learner ever
+      // fumbled shared a single review schedule.
+      const filed = diagnosis.spans.filter((sp) => sp.type === 'substitution');
+      if (filed.length > 0) {
+        for (const span of filed) {
+          recordPronunciationError({
+            target: span.target,
+            spoken: span.spoken,
+            confidence: span.confidence
+          });
+        }
+        console.log(
+          chalk.dim(`  🧠 ${filed.length} pronunciation card(s) scheduled for review.\n`)
+        );
+      } else {
+        recordError('Speaking Accuracy', item.sentence, spokenText);
+      }
     }
 
     printDivider();
