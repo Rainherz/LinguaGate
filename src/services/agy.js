@@ -190,3 +190,63 @@ Reply ONLY with a raw JSON object (no markdown, no code fences):
   tip: string (a golden rule or memory trick in Spanish)`;
   return JSON.parse(callAgy(prompt));
 }
+
+export function roleplayTurn(scenario, chatHistory, userMessage, objectives) {
+  const prompt = `You are the engine of an English conversational roleplay simulation.
+Scenario: "${scenario.title}" — ${scenario.description}
+Your Role/Character: "${scenario.character}"
+Required Student Objectives:
+${objectives.map((o) => `- ID ${o.id}: "${o.text}" (Currently completed: ${o.completed})`).join('\n')}
+
+Conversation History:
+${chatHistory.map((m) => `${m.role}: ${m.text}`).join('\n')}
+User: "${userMessage}"
+
+Tasks:
+1. Check if the user's latest message has serious grammar/spelling errors.
+2. If grammar is acceptable, check which objective IDs have now been satisfied.
+3. Generate the next realistic, in-character response (1-2 sentences maximum).
+
+Reply ONLY with a raw JSON object (no markdown, no code fences):
+  grammar: {
+    isCorrect: boolean,
+    corrections: string[],
+    correctedText: string,
+    explanation: string
+  },
+  newlyCompletedIds: number[],
+  characterReply: string`;
+  return JSON.parse(callAgy(prompt));
+}
+
+export function getSlangWorkout(category = 'tech') {
+  const seed = Math.floor(Math.random() * 10000);
+  const prompt = `Generate a high-impact Phrasal Verbs & Real-World Slang mini-workout.
+Category: "${category}" (options: tech/workplace, everyday life, business, idioms)
+Seed: ${seed}
+
+Provide 3 distinct items:
+For each item:
+- phrase: string (e.g. "touch base", "call it a day", "figure out")
+- literalMeaning: string in Spanish (what it sounds like literally)
+- realMeaning: string in Spanish (what it actually means)
+- situation: string in Spanish (when native speakers use it)
+- example: string (natural conversation dialogue in English)
+- challenge: {
+    prompt: string,
+    answer: string,
+    hint: string
+  }
+
+Reply ONLY with a raw JSON object (no markdown, no code fences):
+  categoryTitle: string,
+  items: Array<{
+    phrase: string,
+    literalMeaning: string,
+    realMeaning: string,
+    situation: string,
+    example: string,
+    challenge: { prompt: string, answer: string, hint: string }
+  }>`;
+  return JSON.parse(callAgy(prompt));
+}

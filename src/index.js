@@ -8,6 +8,8 @@ import { loadProgress } from './services/progress.js';
 import { SessionStats } from './services/stats.js';
 import { banner, printWordOfDay } from './ui/display.js';
 import { runPath } from './modes/path.js';
+import { runRoleplay } from './modes/roleplay.js';
+import { runSlang } from './modes/slang.js';
 import { runPlacementTest } from './modes/placement.js';
 import { runTimeAttack } from './modes/timeattack.js';
 import { runChat } from './modes/chat.js';
@@ -17,12 +19,14 @@ import { runReview } from './modes/review.js';
 
 const MODES = {
   PATH: '🗺️  Learning Path (CEFR A1 ➔ C1)',
+  ROLEPLAY: '🎭 Roleplay Missions (Real Scenarios)',
+  SLANG: '💬 Phrasal Verbs & Slang Vault',
   TIMEATTACK: '⚡ Time Attack (60s Rapid Fire)',
+  REVIEW: '🧠 Review Mistakes (SRS / SM-2)',
   PLACEMENT: '🎓 Placement Test (Calibrate Level)',
   CHAT: '💬 Free Chat',
   TRANSLATE: '🌍 Translate (ES → EN)',
   FILLBLANK: '✏️  Fill in the Blank',
-  REVIEW: '🧠 Review Mistakes (SRS / SM-2)',
 };
 
 async function getDifficulty() {
@@ -68,6 +72,8 @@ async function main() {
       message: 'Choose your mode:',
       choices: [
         { name: MODES.PATH,       value: 'PATH' },
+        { name: MODES.ROLEPLAY,   value: 'ROLEPLAY' },
+        { name: MODES.SLANG,      value: 'SLANG' },
         { name: MODES.TIMEATTACK, value: 'TIMEATTACK' },
         { name: MODES.REVIEW,     value: 'REVIEW' },
         { name: MODES.PLACEMENT,  value: 'PLACEMENT' },
@@ -81,7 +87,7 @@ async function main() {
     if (modeKey === 'QUIT') break;
 
     let difficulty = 'beginner';
-    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK'].includes(modeKey)) {
+    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK', 'ROLEPLAY', 'SLANG'].includes(modeKey)) {
       difficulty = await getDifficulty();
     }
 
@@ -89,6 +95,8 @@ async function main() {
     const stats = new SessionStats(MODES[modeKey]);
 
     if (modeKey === 'PATH')       await runPath(stats);
+    if (modeKey === 'ROLEPLAY')   await runRoleplay(stats);
+    if (modeKey === 'SLANG')      await runSlang(stats);
     if (modeKey === 'TIMEATTACK') await runTimeAttack(stats);
     if (modeKey === 'PLACEMENT')  await runPlacementTest();
     if (modeKey === 'REVIEW')     await runReview(stats);

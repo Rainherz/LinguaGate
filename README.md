@@ -1,8 +1,6 @@
 # LinguaGate 🚪🗣️
 
-> A CLI English learning tool that only replies when your grammar is correct.
-
-Built with Node.js + [Antigravity CLI](https://antigravity.dev) as the AI backend — no API key required.
+> A CLI English learning platform powered by [Antigravity CLI](https://antigravity.dev) — no API key required.
 
 ---
 
@@ -10,10 +8,10 @@ Built with Node.js + [Antigravity CLI](https://antigravity.dev) as the AI backen
 
 You write in English. LinguaGate checks your grammar before doing anything else.
 
-- ✅ **Correct** → the bot replies and your streak grows
-- ❌ **Wrong** → it shows every error, the corrected sentence, full grammar theory, and why — then asks you to try again
+- ✅ **Correct** → the bot replies, objectives complete, and your streak grows
+- ❌ **Wrong** → it breaks down every error with grammar theory, suggestions, and tips
 
-Every mistake is converted into a **Spaced Repetition (SRS)** flashcard so the review system knows exactly when to test you again.
+Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetition (SRS)** flashcard.
 
 ---
 
@@ -21,9 +19,11 @@ Every mistake is converted into a **Spaced Repetition (SRS)** flashcard so the r
 
 | Mode | Description |
 |------|-------------|
-| 🗺️ **Learning Path** | CEFR structured curriculum (A1 ➔ C1) with progressive lesson unlocks & XP. |
+| 🗺️ **Learning Path** | CEFR structured curriculum (A1 ➔ C1) with progressive lesson unlocks, micro-theory cheat sheets, and XP. |
+| 🎭 **Roleplay Missions** | Real-world interactive scenarios (NYC Coffee Shop, Tech Standup, Airport Customs, Hotel) with live objective tracking. |
+| 💬 **Phrasal Verbs & Slang** | Master native idiomatic expressions (Tech/Workplace, Daily Slang, Business) with situational quizzes. |
 | ⚡ **Time Attack** | 60-second rapid fire grammar speed challenge with rankings. |
-| 🧠 **Review Mistakes (SRS)** | Spaced Repetition (SM-2 algorithm) testing cards due for retention. |
+| 🧠 **Review Mistakes (SRS)** | SuperMemo SM-2 spaced repetition cards targeting grammar patterns due for retention. |
 | 🎓 **Placement Test** | Adaptive diagnostic test that calibrates your CEFR level and auto-unlocks units. |
 | 💬 **Free Chat** | Open conversational practice with active grammar gate. |
 | 🌍 **Translate** | Translate Spanish phrases to English with comprehensive grammar theory breakdowns. |
@@ -31,10 +31,9 @@ Every mistake is converted into a **Spaced Repetition (SRS)** flashcard so the r
 
 ---
 
-## 🗺️ Curriculum (CEFR Standard)
+## 🗺️ CEFR Curriculum
 
-The Learning Path is structured into 5 progressive levels:
-- **A1 (The Basics)**: Introductions, Articles, Daily Routines, Prepositions of Time, Wh- Questions.
+- **A1 (The Basics)**: Introductions, Articles & Nouns, Daily Routines, Time & Dates, Wh- Questions.
 - **A2 (Getting Around)**: Past Simple (regular/irregular), Comparatives/Superlatives, Modals, Future Plans, Phrasal Verbs.
 - **B1 (Speaking Your Mind)**: Present Perfect, Continuous Tenses, Zero/First Conditionals, Gerunds vs Infinitives, Linking Words.
 - **B2 (Complex Ideas)**: Passive Voice, Second/Third Conditionals, Narrative Tenses, Relative Clauses, Past Modals.
@@ -44,11 +43,12 @@ The Learning Path is structured into 5 progressive levels:
 
 ## Features
 
-- 🎓 **Adaptive Placement Test**: Calibrate directly to A2, B1, or B2 without repeating what you already know.
-- 🧠 **SuperMemo SM-2 SRS Engine**: Errors dynamically schedule intervals (1d ➔ 3d ➔ 7d ➔ 30d).
+- 🎭 **Interactive Objective-Driven Roleplay**: Scenarios evaluate grammar + checklist goals in real time.
+- 💬 **Idiomatic English Vault**: Phrasal verbs explained by real meaning vs literal traps.
+- 🎓 **Adaptive Placement Test**: Calibrate directly to your real level (A2, B1, B2) without repeating what you already know.
+- 🧠 **SuperMemo SM-2 SRS Engine**: Errors dynamically schedule intervals (1d ➔ 3d ➔ 7d ➔ 30d) with theory recaps and hints.
 - ⚡ **Time Attack Mode**: Test grammar reflexes under pressure with speed ranks.
 - 🗺️ **Duolingo-style Progression**: Unlock lessons in sequence as you pass exercises.
-- ⚡ **XP & Leveling**: Earn experience points per completed lesson.
 - 🔥 **Streak Counter**: Track consecutive correct answers and personal records.
 - 📖 **Grammar Theory Engine**: Deep explanations of grammar rules on mistake.
 - ✨ **Word of the Day**: High-frequency vocabulary presented on startup.
