@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import boxen from 'boxen';
 
 export class SessionStats {
   constructor(mode) {
@@ -36,19 +37,29 @@ export class SessionStats {
     const mins = Math.floor(duration / 60);
     const secs = duration % 60;
 
-    console.log(chalk.bold.cyan('\n┌─── Session Summary ───────────────────┐'));
-    console.log(chalk.cyan(`│  Mode:     ${chalk.white(mode.padEnd(27))}│`));
-    console.log(chalk.cyan(`│  Duration: ${chalk.white(`${mins}m ${secs}s`.padEnd(27))}│`));
-    console.log(chalk.cyan(`│  Correct:  ${chalk.green(String(correct).padEnd(27))}│`));
-    console.log(chalk.cyan(`│  Errors:   ${chalk.red(String(incorrect).padEnd(27))}│`));
-    console.log(chalk.cyan(`│  Score:    ${chalk.yellow(`${pct}%`.padEnd(27))}│`));
+    let content = `${chalk.dim('Mode:')}     ${chalk.bold.white(mode)}\n` +
+      `${chalk.dim('Time:')}     ${chalk.white(`${mins}m ${secs}s`)}\n` +
+      `${chalk.dim('Correct:')}  ${chalk.green(correct)}\n` +
+      `${chalk.dim('Errors:')}   ${chalk.red(incorrect)}\n` +
+      `${chalk.dim('Accuracy:')} ${chalk.bold.yellow(`${pct}%`)}`;
+
     if (topErrors.length > 0) {
-      console.log(chalk.cyan(`│  Top mistakes:${' '.repeat(24)}│`));
+      content += `\n\n${chalk.dim('Top mistakes:')}\n`;
       topErrors.forEach((e) => {
-        const line = `  • ${e}`.slice(0, 38).padEnd(38);
-        console.log(chalk.cyan(`│  ${chalk.red(line)}│`));
+        content += `  ${chalk.red('•')} ${chalk.gray(e)}\n`;
       });
     }
-    console.log(chalk.bold.cyan('└───────────────────────────────────────┘\n'));
+
+    console.log(
+      boxen(content.trim(), {
+        title: chalk.bold.cyan(' 📊 Session Summary '),
+        titleAlignment: 'left',
+        padding: 1,
+        margin: { top: 1, bottom: 1, left: 1, right: 1 },
+        borderStyle: 'round',
+        borderColor: 'cyan',
+        dimBorder: true
+      })
+    );
   }
 }

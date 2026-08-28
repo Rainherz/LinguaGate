@@ -3,11 +3,12 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { checkGrammar, chatReply } from '../services/agy.js';
 import { recordError, updateStreak } from '../services/history.js';
-import { printError, printSuccess, printBotReply, printStreak } from '../ui/display.js';
+import { clearScreen, printAppHeader, printError, printSuccess, printBotReply, printStreak } from '../ui/display.js';
 
 export async function runChat(stats) {
-  console.log(chalk.gray('\n  💬 Free Chat mode — type anything, grammar gate active.'));
-  console.log(chalk.gray('  Type /quit to exit.\n'));
+  clearScreen();
+  printAppHeader('Free Chat (Grammar Gate)');
+  console.log(chalk.gray('  Type anything in English. Type /quit to exit.\n'));
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 

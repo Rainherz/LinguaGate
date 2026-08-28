@@ -2,7 +2,7 @@ import readline from 'node:readline';
 import { select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import { updateStreak } from '../services/history.js';
-import { printStreak, printDivider } from '../ui/display.js';
+import { clearScreen, printAppHeader, printStreak, printDivider } from '../ui/display.js';
 
 const QUICK_QUESTIONS = [
   { prompt: 'She (dont / doesnt) know the answer.', answer: 'doesnt', hint: 'Third person singular' },
@@ -24,10 +24,9 @@ function ask(rl, question) {
 }
 
 export async function runTimeAttack(stats) {
-  console.log(chalk.bold.cyan('\n══════════════════════════════════════════════════════════════════'));
-  console.log(chalk.bold.yellow('  ⚡ TIME ATTACK: 60-SECOND RAPID FIRE'));
-  console.log(chalk.gray('  Answer as many quick grammar challenges as you can before time runs out!'));
-  console.log(chalk.bold.cyan('══════════════════════════════════════════════════════════════════\n'));
+  clearScreen();
+  printAppHeader('Time Attack (60s Rapid Fire)');
+  console.log(chalk.gray('  Answer as many quick grammar challenges as you can before time runs out!\n'));
 
   // Shuffle questions
   const questions = [...QUICK_QUESTIONS].sort(() => Math.random() - 0.5);

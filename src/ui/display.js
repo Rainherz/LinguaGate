@@ -1,16 +1,37 @@
 import chalk from 'chalk';
+import boxen from 'boxen';
+
+export function clearScreen() {
+  console.clear();
+}
+
+export function printAppHeader(subTitle = '') {
+  const brand = chalk.bold.cyan('LinguaGate') + chalk.dim(' 🚪🗣️');
+  const path = subTitle ? chalk.dim(' › ') + chalk.bold.white(subTitle) : '';
+  console.log(`\n  ${brand}${path}\n`);
+}
 
 export function banner() {
-  console.log(chalk.bold.cyan('\n╔══════════════════════════════════╗'));
-  console.log(chalk.bold.cyan('║       LinguaGate  🚪🗣️             ║'));
-  console.log(chalk.bold.cyan('╚══════════════════════════════════╝'));
-  console.log(chalk.gray('  Write in English. I only reply if your grammar is correct.\n'));
+  clearScreen();
+  console.log(
+    boxen(
+      `${chalk.bold.cyan('LinguaGate')} ${chalk.dim('— English Learning Engine')}\n` +
+      `${chalk.gray('Active grammar gate • CEFR Path • Spaced Repetition')}`,
+      {
+        padding: { top: 0, bottom: 0, left: 2, right: 2 },
+        margin: { top: 1, bottom: 1, left: 1, right: 1 },
+        borderStyle: 'round',
+        borderColor: 'cyan',
+        dimBorder: true
+      }
+    )
+  );
 }
 
 export function printStreak(n) {
   if (n <= 0) return;
   const fire = '🔥'.repeat(Math.min(n, 5));
-  console.log(chalk.yellow(`  ${fire} ${n} in a row!\n`));
+  console.log(chalk.yellow(`  ${fire} ${n} streak!\n`));
 }
 
 export function printError(result) {
@@ -37,13 +58,54 @@ export function printBotReply(text) {
 }
 
 export function printWordOfDay({ word, partOfSpeech, definition, example }) {
-  console.log(chalk.bold.magenta('  ✨ Word of the Day'));
-  console.log(chalk.magenta(`  ${chalk.bold(word)} ${chalk.gray(`(${partOfSpeech})`)}`));
-  console.log(chalk.gray(`  ${definition}`));
-  console.log(chalk.gray(`  e.g. "${example}"`));
-  console.log();
+  console.log(
+    boxen(
+      `${chalk.bold.magenta('✨ Word of the Day')} ${chalk.dim(`(${partOfSpeech})`)}\n` +
+      `${chalk.bold.white(word)}\n` +
+      `${chalk.gray(definition)}\n` +
+      `${chalk.italic.dim(`e.g. "${example}"`)}`,
+      {
+        padding: { top: 0, bottom: 0, left: 2, right: 2 },
+        margin: { top: 0, bottom: 1, left: 1, right: 1 },
+        borderStyle: 'round',
+        borderColor: 'magenta',
+        dimBorder: true
+      }
+    )
+  );
+}
+
+export function printTheoryCard(theory, lesson) {
+  let content = `${chalk.bold.yellow(theory.title || lesson.title)}\n`;
+  content += `${chalk.gray(theory.explanation)}\n\n`;
+
+  if (theory.rules && theory.rules.length > 0) {
+    theory.rules.forEach((r) => {
+      content += `${chalk.cyan('• ' + r.rule)}\n`;
+      content += `  ${chalk.white('Ejemplo:')} ${chalk.italic(r.example)}\n`;
+      if (r.note) content += `  ${chalk.dim('Ojo:')} ${chalk.gray(r.note)}\n`;
+      content += '\n';
+    });
+  }
+
+  if (theory.tip) {
+    const cleanTip = theory.tip.replace(/^Regla de oro:\s*/i, '');
+    content += `${chalk.bold.green('💡 Regla de oro:')} ${chalk.white(cleanTip)}`;
+  }
+
+  console.log(
+    boxen(content.trim(), {
+      title: chalk.bold.magenta(' 📖 Píldora Teórica '),
+      titleAlignment: 'left',
+      padding: 1,
+      margin: { top: 1, bottom: 1, left: 1, right: 1 },
+      borderStyle: 'round',
+      borderColor: 'magenta',
+      dimBorder: false
+    })
+  );
 }
 
 export function printDivider() {
-  console.log(chalk.gray('  ─────────────────────────────────────\n'));
+  console.log(chalk.dim('  ───────────────────────────────────────────────────\n'));
 }

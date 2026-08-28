@@ -3,15 +3,16 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { getSpanishPhrase, checkTranslation } from '../services/agy.js';
 import { recordError, updateStreak } from '../services/history.js';
-import { printStreak, printDivider } from '../ui/display.js';
+import { clearScreen, printAppHeader, printStreak, printDivider } from '../ui/display.js';
 
 function ask(rl, question) {
   return new Promise((resolve) => rl.question(question, resolve));
 }
 
 export async function runTranslate(stats, difficulty) {
-  console.log(chalk.gray(`\n  🌍 Translation mode (${difficulty}) — translate from Spanish to English.`));
-  console.log(chalk.gray('  Type /quit to exit.\n'));
+  clearScreen();
+  printAppHeader(`Translate (${difficulty.toUpperCase()})`);
+  console.log(chalk.gray('  Translate the Spanish phrase to natural English. Type /quit to exit.\n'));
 
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 

@@ -7,7 +7,7 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { checkTranslation } from '../services/agy.js';
 import { unlockUpToLevel } from '../services/progress.js';
-import { printDivider } from '../ui/display.js';
+import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const curriculumPath = join(__dirname, '../curriculum.json');
@@ -98,10 +98,9 @@ const QUESTIONS = [
 ];
 
 export async function runPlacementTest() {
-  console.log(chalk.bold.cyan('\n══════════════════════════════════════════════════════════════════'));
-  console.log(chalk.bold.yellow('  🎯 ADAPTIVE PLACEMENT TEST (CEFR Assessment)'));
-  console.log(chalk.gray('  Answer the following questions to automatically calibrate your level.'));
-  console.log(chalk.bold.cyan('══════════════════════════════════════════════════════════════════\n'));
+  clearScreen();
+  printAppHeader('Adaptive Placement Test');
+  console.log(chalk.gray('  Answer 6 diagnostic questions to calibrate your CEFR level.\n'));
 
   let scores = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0 };
   const totalPerLevel = { A1: 1, A2: 1, B1: 2, B2: 1, C1: 1 };

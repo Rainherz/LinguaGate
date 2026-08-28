@@ -102,7 +102,9 @@ async function main() {
     }
 
     playAgain = await confirm({ message: 'Play again?', default: true });
-    console.log();
+    if (playAgain) {
+      banner();
+    }
   }
 
   console.log(chalk.cyan('\n  Bye! Keep practicing. 👋\n'));
