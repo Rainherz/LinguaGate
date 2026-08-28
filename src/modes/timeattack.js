@@ -3,6 +3,7 @@ import { select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import { updateStreak } from '../services/history.js';
 import { clearScreen, printAppHeader, printStreak, printDivider } from '../ui/display.js';
+import { ask } from '../ui/prompt.js';
 
 const QUICK_QUESTIONS = [
   { prompt: 'She (dont / doesnt) know the answer.', answer: 'doesnt', hint: 'Third person singular' },
@@ -18,10 +19,6 @@ const QUICK_QUESTIONS = [
   { prompt: 'The car was repaired (by / with) the mechanic.', answer: 'by', hint: 'Passive agent' },
   { prompt: 'You (must / should) stop at a red light.', answer: 'must', hint: 'Obligation / Law' }
 ];
-
-function ask(rl, question) {
-  return new Promise((resolve) => rl.question(question, resolve));
-}
 
 export async function runTimeAttack(stats) {
   clearScreen();

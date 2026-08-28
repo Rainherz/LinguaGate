@@ -5,10 +5,7 @@ import boxen from 'boxen';
 import { getMistakeExercise } from '../services/agy.js';
 import { getDueSrsCards, reviewSrsCard } from '../services/history.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
-
-function ask(rl, question) {
-  return new Promise((resolve) => rl.question(question, resolve));
-}
+import { ask } from '../ui/prompt.js';
 
 export async function runReview(stats) {
   clearScreen();

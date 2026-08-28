@@ -2,7 +2,7 @@ import readline from 'node:readline';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { safeSelect } from '../ui/prompt.js';
+import { safeSelect, ask } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import { checkTranslation } from '../services/agy.js';
@@ -21,10 +21,6 @@ function getAllLessons() {
     }
   }
   return list;
-}
-
-function ask(rl, question) {
-  return new Promise((resolve) => rl.question(question, resolve));
 }
 
 const QUESTIONS = [

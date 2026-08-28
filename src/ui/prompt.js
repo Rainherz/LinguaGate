@@ -29,3 +29,8 @@ export async function safeConfirm(config) {
     throw err;
   }
 }
+
+export function ask(rl, question) {
+  return new Promise((resolve) => rl.question(question, resolve));
+}
+

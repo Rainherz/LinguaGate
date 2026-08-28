@@ -27,13 +27,15 @@ import {
   printTheoryCard
 } from '../ui/display.js';
 
+import {
+  evaluateTranslationExercise,
+  evaluateFillBlankExercise,
+  evaluateChatExercise
+} from '../services/evaluator.js';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const curriculumPath = join(__dirname, '../curriculum.json');
 const curriculum = JSON.parse(readFileSync(curriculumPath, 'utf-8'));
-
-function ask(rl, question) {
-  return new Promise((resolve) => rl.question(question, resolve));
-}
 
 function getAllLessons() {
   const list = [];
@@ -75,61 +77,20 @@ async function runExercise(exerciseType, lesson, stats, rl, index, total) {
     try {
       phrase = getLessonPhrase(lesson);
       spinner.stop();
-    } catch (err) {
+    } catch {
       spinner.fail('Error generating phrase');
       return false;
     }
 
-    console.log(`  ${chalk.bold.yellow('🇪🇸')} ${chalk.bold.white(phrase.spanish)}`);
-    console.log(`  ${chalk.dim('💡 Hint:')} ${chalk.gray(phrase.hint)}\n`);
-
-    const input = (await ask(rl, chalk.bold.green('  Your translation › '))).trim();
-    if (!input) return false;
-
-    const evalSpinner = ora({ text: 'Evaluating...', color: 'yellow', indent: 2 }).start();
-    let evaluation;
-    try {
-      evaluation = checkTranslation(phrase.spanish, input, phrase.english);
-      evalSpinner.stop();
-    } catch (err) {
-      evalSpinner.fail('Evaluation failed');
-      return false;
-    }
-
-    console.log();
-    if (evaluation.isCorrect) {
-      if (evaluation.score === 100) {
-        console.log(chalk.bold.green(`  ✔ Perfect! (100/100)`));
-      } else {
-        console.log(chalk.green(`  ✔ Accepted! (${evaluation.score}/100)`));
-      }
-      if (evaluation.feedback) {
-        console.log(chalk.gray(`  💬 ${evaluation.feedback}`));
-      }
-      console.log(`  ${chalk.dim('🎯 Ideal:')} ${chalk.cyan(phrase.english)}\n`);
-      updateStreak(true);
-      stats.recordCorrect();
-      return true;
-    } else {
-      console.log(chalk.red(`  ✖ Needs improvement (${evaluation.score}/100)`));
-      if (evaluation.feedback) {
-        console.log(chalk.gray(`  💬 ${evaluation.feedback}`));
-      }
-      console.log(`  ${chalk.dim('🎯 Expected:')} ${chalk.cyan(phrase.english)}\n`);
-
-      if (evaluation.errors?.length > 0) {
-        for (const err of evaluation.errors) {
-          console.log(`  ${chalk.red('❌')} ${chalk.yellow(err.wrong)} ${chalk.dim('→')} ${chalk.green(err.correct)}`);
-          console.log(`     ${chalk.bold.white(err.rule)}: ${chalk.gray(err.theory)}`);
-          if (err.example) console.log(`     ${chalk.dim('e.g.')} ${chalk.italic.gray(err.example)}`);
-          console.log();
-          recordError(err.rule, phrase.spanish, phrase.english);
-        }
-      }
-      updateStreak(false);
-      stats.recordIncorrect(lesson.grammar);
-      return false;
-    }
+    const res = await evaluateTranslationExercise({
+      spanish: phrase.spanish,
+      expectedEnglish: phrase.english,
+      hint: phrase.hint,
+      grammarRule: lesson.grammar,
+      stats,
+      rl
+    });
+    return res.isCorrect;
   }
 
   if (exerciseType === 'fillblank') {
@@ -138,36 +99,21 @@ async function runExercise(exerciseType, lesson, stats, rl, index, total) {
     try {
       exercise = getLessonFillBlank(lesson);
       spinner.stop();
-    } catch (err) {
+    } catch {
       spinner.fail('Error loading exercise');
       return false;
     }
 
-    const sentenceWithHighlight = exercise.sentence.replace('___', chalk.bold.cyan('___'));
-    console.log(`  ${chalk.bold.white(sentenceWithHighlight)}`);
-    console.log(`  ${chalk.dim('💡 Hint:')} ${chalk.gray(exercise.hint)}\n`);
-
-    const input = (await ask(rl, chalk.bold.green('  Your answer › '))).trim();
-    if (!input) return false;
-
-    const isMatch = input.toLowerCase() === exercise.answer.toLowerCase();
-    console.log();
-    if (isMatch) {
-      console.log(chalk.green(`  ✔ Correct! "${exercise.answer}" is right.\n`));
-      updateStreak(true);
-      stats.recordCorrect();
-      return true;
-    } else {
-      console.log(chalk.red(`  ✖ Incorrect. The answer is: "${chalk.white(exercise.answer)}"`));
-      if (exercise.explanation) {
-        console.log(`  ${chalk.dim('Why:')} ${chalk.gray(exercise.explanation)}`);
-      }
-      console.log();
-      updateStreak(false);
-      stats.recordIncorrect(lesson.grammar);
-      recordError(lesson.grammar, exercise.sentence, exercise.answer);
-      return false;
-    }
+    const res = await evaluateFillBlankExercise({
+      sentence: exercise.sentence,
+      answer: exercise.answer,
+      hint: exercise.hint,
+      explanation: exercise.explanation,
+      grammarRule: lesson.grammar,
+      stats,
+      rl
+    });
+    return res.isCorrect;
   }
 
   if (exerciseType === 'chat') {
@@ -176,46 +122,23 @@ async function runExercise(exerciseType, lesson, stats, rl, index, total) {
     try {
       promptQuestion = getLessonChatPrompt(lesson);
       spinner.stop();
-    } catch (err) {
+    } catch {
       spinner.fail('Tutor error');
       return false;
     }
 
-    console.log(`  ${chalk.bold.blue('🤖 Tutor:')} ${chalk.white(promptQuestion)}`);
-    console.log(`  ${chalk.dim(`(Practice: ${lesson.grammar})`)}\n`);
-
-    const input = (await ask(rl, chalk.bold.green('  Your reply › '))).trim();
-    if (!input) return false;
-
-    const checkSpinner = ora({ text: 'Checking grammar...', color: 'yellow', indent: 2 }).start();
-    let result;
-    try {
-      result = checkGrammar(input);
-      checkSpinner.stop();
-    } catch (err) {
-      checkSpinner.fail('Check failed');
-      return false;
-    }
-
-    console.log();
-    if (result.isCorrect) {
-      console.log(chalk.green('  ✔ Great grammar!'));
-      const reply = chatReply(input);
-      printBotReply(reply);
-      updateStreak(true);
-      stats.recordCorrect();
-      return true;
-    } else {
-      printError(result);
-      updateStreak(false);
-      stats.recordIncorrect(lesson.grammar);
-      result.corrections?.forEach((c) => recordError(c, input, result.correctedText));
-      return false;
-    }
+    const res = await evaluateChatExercise({
+      promptQuestion,
+      grammarRule: lesson.grammar,
+      stats,
+      rl
+    });
+    return res.isCorrect;
   }
 
   return true;
 }
+
 
 async function executeSingleLesson(lesson, stats) {
   clearScreen();
