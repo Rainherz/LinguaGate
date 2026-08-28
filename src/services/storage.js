@@ -1,6 +1,17 @@
 import { readFileSync, writeFileSync, renameSync, unlinkSync, copyFileSync, mkdirSync, existsSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Returns the resolved data directory, supporting LINGUAGATE_DATA_DIR override for testing and isolated runs.
+ * @returns {string}
+ */
+export function getDataDir() {
+  return process.env.LINGUAGATE_DATA_DIR || join(__dirname, '../../data');
+}
 
 /**
  * Ensures the target directory exists.

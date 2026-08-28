@@ -1,10 +1,9 @@
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { readJson, writeJsonAtomic } from './storage.js';
+import { join } from 'node:path';
+import { readJson, writeJsonAtomic, getDataDir } from './storage.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = join(__dirname, '../../data');
-const PROGRESS_FILE = join(DATA_DIR, 'progress.json');
+function getProgressFilePath() {
+  return join(getDataDir(), 'progress.json');
+}
 
 const DEFAULT_PROGRESS = {
   xp: 0,
@@ -14,7 +13,7 @@ const DEFAULT_PROGRESS = {
 };
 
 export function loadProgress() {
-  const data = readJson(PROGRESS_FILE, DEFAULT_PROGRESS);
+  const data = readJson(getProgressFilePath(), DEFAULT_PROGRESS);
   if (!Array.isArray(data.completedLessons)) data.completedLessons = [];
   if (!Array.isArray(data.history)) data.history = [];
   if (typeof data.xp !== 'number') data.xp = 0;
@@ -22,7 +21,7 @@ export function loadProgress() {
 }
 
 export function saveProgress(data) {
-  writeJsonAtomic(PROGRESS_FILE, data);
+  writeJsonAtomic(getProgressFilePath(), data);
 }
 
 export function completeLesson(lessonId, earnedXp = 50) {

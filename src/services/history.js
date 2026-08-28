@@ -1,10 +1,9 @@
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { readJson, writeJsonAtomic } from './storage.js';
+import { join } from 'node:path';
+import { readJson, writeJsonAtomic, getDataDir } from './storage.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = join(__dirname, '../../data');
-const HISTORY_FILE = join(DATA_DIR, 'history.json');
+function getHistoryFilePath() {
+  return join(getDataDir(), 'history.json');
+}
 
 const DEFAULT = {
   errors: [],
@@ -15,7 +14,7 @@ const DEFAULT = {
 };
 
 export function loadHistory() {
-  const data = readJson(HISTORY_FILE, DEFAULT);
+  const data = readJson(getHistoryFilePath(), DEFAULT);
   if (!data.srsCards) data.srsCards = {};
   if (!Array.isArray(data.errors)) data.errors = [];
   if (!Array.isArray(data.sessions)) data.sessions = [];
@@ -23,7 +22,7 @@ export function loadHistory() {
 }
 
 export function saveHistory(data) {
-  writeJsonAtomic(HISTORY_FILE, data);
+  writeJsonAtomic(getHistoryFilePath(), data);
 }
 
 export function recordError(errorType, original, corrected) {
