@@ -1,5 +1,5 @@
 import readline from 'node:readline';
-import { select } from '@inquirer/prompts';
+import { safeSelect } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
@@ -87,15 +87,15 @@ export async function runRoleplay(stats) {
   clearScreen();
   printAppHeader('Interactive Roleplay Missions');
 
-  const chosenId = await select({
-    message: 'Choose a real-world mission:',
+  const chosenId = await safeSelect({
+    message: 'Choose a real-world mission (Esc to go back):',
     choices: [
-      ...SCENARIOS.map((s) => ({ name: `${s.title} — ${chalk.gray(s.description)}`, value: s.id })),
-      { name: '🔙 Back to Main Menu', value: 'BACK' }
+      { name: '🔙 Back to Main Menu (or press Esc)', value: 'BACK' },
+      ...SCENARIOS.map((s) => ({ name: `${s.title} — ${chalk.gray(s.description)}`, value: s.id }))
     ]
   });
 
-  if (chosenId === 'BACK') return;
+  if (!chosenId || chosenId === 'BACK') return;
 
   const baseScenario = SCENARIOS.find((s) => s.id === chosenId);
   const scenario = structuredClone(baseScenario);

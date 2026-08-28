@@ -2,7 +2,7 @@ import readline from 'node:readline';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { select, confirm } from '@inquirer/prompts';
+import { safeSelect, safeConfirm } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
@@ -310,29 +310,30 @@ export async function runPath(stats) {
 
   renderOverview(progress, allLessons);
 
-  const choices = allLessons.map((lesson) => {
-    const isCompleted = progress.completedLessons.includes(lesson.id);
-    const isUnlocked = isLessonUnlocked(lesson.id, allLessons);
+  const choices = [
+    { name: '🔙 Back to Main Menu (or press Esc)', value: 'BACK' },
+    ...allLessons.map((lesson) => {
+      const isCompleted = progress.completedLessons.includes(lesson.id);
+      const isUnlocked = isLessonUnlocked(lesson.id, allLessons);
 
-    let prefix = '🔒';
-    if (isCompleted) prefix = '✅';
-    else if (isUnlocked) prefix = '📍';
+      let prefix = '🔒';
+      if (isCompleted) prefix = '✅';
+      else if (isUnlocked) prefix = '📍';
 
-    return {
-      name: `${prefix} [${lesson.id}] ${lesson.title} (${lesson.unitLevel})`,
-      value: lesson.id,
-      disabled: !isUnlocked ? '(Locked)' : false
-    };
-  });
+      return {
+        name: `${prefix} [${lesson.id}] ${lesson.title} (${lesson.unitLevel})`,
+        value: lesson.id,
+        disabled: !isUnlocked ? '(Locked)' : false
+      };
+    })
+  ];
 
-  choices.push({ name: '🔙 Back to Main Menu', value: 'BACK' });
-
-  const chosenLessonId = await select({
-    message: 'Select a lesson to start:',
+  const chosenLessonId = await safeSelect({
+    message: 'Select a lesson to start (Esc to go back):',
     choices
   });
 
-  if (chosenLessonId === 'BACK') return;
+  if (!chosenLessonId || chosenLessonId === 'BACK') return;
 
   let currentLesson = allLessons.find((l) => l.id === chosenLessonId);
 
@@ -344,7 +345,7 @@ export async function runPath(stats) {
       const nextLesson = allLessons[currentIndex + 1];
 
       if (nextLesson) {
-        const continueNext = await confirm({
+        const continueNext = await safeConfirm({
           message: `Continue directly to next lesson (${nextLesson.id}: ${nextLesson.title})?`,
           default: true
         });
@@ -356,7 +357,7 @@ export async function runPath(stats) {
       }
       break;
     } else {
-      const retryLesson = await confirm({
+      const retryLesson = await safeConfirm({
         message: `Retry this lesson (${currentLesson.id}: ${currentLesson.title})?`,
         default: true
       });
@@ -368,3 +369,4 @@ export async function runPath(stats) {
     }
   }
 }
+

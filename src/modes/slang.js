@@ -1,5 +1,5 @@
 import readline from 'node:readline';
-import { select } from '@inquirer/prompts';
+import { safeSelect } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
@@ -15,17 +15,17 @@ export async function runSlang(stats) {
   clearScreen();
   printAppHeader('Phrasal Verbs & Slang Vault');
 
-  const category = await select({
-    message: 'Select a theme to master:',
+  const category = await safeSelect({
+    message: 'Select a theme to master (Esc to go back):',
     choices: [
+      { name: '🔙 Back to Main Menu (or press Esc)', value: 'BACK' },
       { name: '💻 Tech & Workplace (touch base, circle back, ship it...)', value: 'tech & software engineering workplace' },
       { name: '☕ Everyday Life & Idioms (hang out, spill the beans, bite the bullet...)', value: 'everyday native slang and idioms' },
-      { name: '💼 Business & Negotiations (bottom line, cut corners, ballpark...)', value: 'business and professional negotiation' },
-      { name: '🔙 Back to Main Menu', value: 'BACK' }
+      { name: '💼 Business & Negotiations (bottom line, cut corners, ballpark...)', value: 'business and professional negotiation' }
     ]
   });
 
-  if (category === 'BACK') return;
+  if (!category || category === 'BACK') return;
 
   clearScreen();
   printAppHeader('Slang Vault • Workout');

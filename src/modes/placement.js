@@ -2,7 +2,7 @@ import readline from 'node:readline';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { select } from '@inquirer/prompts';
+import { safeSelect } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import { checkTranslation } from '../services/agy.js';
@@ -112,12 +112,12 @@ export async function runPlacementTest() {
     console.log(chalk.bold.magenta(`\n[Question ${i + 1}/${QUESTIONS.length} — Level ${q.level}]`));
 
     if (q.type === 'choice') {
-      const answer = await select({
+      const answer = await safeSelect({
         message: q.prompt,
         choices: q.options
       });
 
-      if (answer) {
+      if (answer === true) {
         console.log(chalk.green('  ✔ Correct!'));
         scores[q.level] += 1;
       } else {

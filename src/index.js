@@ -1,7 +1,6 @@
-#!/usr/bin/env node
-import { select, confirm } from '@inquirer/prompts';
 import ora from 'ora';
 import chalk from 'chalk';
+import { safeSelect, safeConfirm } from './ui/prompt.js';
 import { getWordOfDay } from './services/agy.js';
 import { loadHistory, recordSession } from './services/history.js';
 import { loadProgress } from './services/progress.js';
@@ -30,12 +29,13 @@ const MODES = {
 };
 
 async function getDifficulty() {
-  return select({
-    message: 'Choose difficulty:',
+  return safeSelect({
+    message: 'Choose difficulty (Esc to cancel):',
     choices: [
       { name: '🟢 Beginner', value: 'beginner' },
       { name: '🟡 Intermediate', value: 'intermediate' },
       { name: '🔴 Advanced', value: 'advanced' },
+      { name: '🔙 Back to Menu (or press Esc)', value: 'BACK' },
     ],
   });
 }
@@ -68,8 +68,8 @@ async function main() {
 
   let playAgain = true;
   while (playAgain) {
-    const modeKey = await select({
-      message: 'Choose your mode:',
+    const modeKey = await safeSelect({
+      message: 'Choose your mode (Esc to quit):',
       choices: [
         { name: MODES.PATH,       value: 'PATH' },
         { name: MODES.ROLEPLAY,   value: 'ROLEPLAY' },
@@ -80,15 +80,19 @@ async function main() {
         { name: MODES.CHAT,       value: 'CHAT' },
         { name: MODES.TRANSLATE,  value: 'TRANSLATE' },
         { name: MODES.FILLBLANK,  value: 'FILLBLANK' },
-        { name: '❌ Quit',        value: 'QUIT' },
+        { name: '❌ Quit (or press Esc)', value: 'QUIT' },
       ],
     });
 
-    if (modeKey === 'QUIT') break;
+    if (!modeKey || modeKey === 'QUIT' || modeKey === 'BACK') break;
 
     let difficulty = 'beginner';
     if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK', 'ROLEPLAY', 'SLANG'].includes(modeKey)) {
       difficulty = await getDifficulty();
+      if (!difficulty || difficulty === 'BACK') {
+        banner();
+        continue;
+      }
     }
 
     console.log();
@@ -109,7 +113,7 @@ async function main() {
       recordSession(stats.getSummary());
     }
 
-    playAgain = await confirm({ message: 'Play again?', default: true });
+    playAgain = await safeConfirm({ message: 'Return to Main Menu / Choose another mode?', default: true });
     if (playAgain) {
       banner();
     }
@@ -119,6 +123,11 @@ async function main() {
 }
 
 main().catch((err) => {
+  if (err?.name === 'ExitPromptError' || err?.message?.includes('force closed')) {
+    console.log(chalk.cyan('\n  Bye! Keep practicing. 👋\n'));
+    process.exit(0);
+  }
   console.error(chalk.red(`\n  Fatal error: ${err.message}\n`));
   process.exit(1);
 });
+
