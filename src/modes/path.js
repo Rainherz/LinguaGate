@@ -2,7 +2,7 @@ import readline from 'node:readline';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { select } from '@inquirer/prompts';
+import { select, confirm } from '@inquirer/prompts';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
@@ -217,42 +217,7 @@ async function runExercise(exerciseType, lesson, stats, rl, index, total) {
   return true;
 }
 
-export async function runPath(stats) {
-  clearScreen();
-  printAppHeader('Learning Path');
-
-  const allLessons = getAllLessons();
-  const progress = loadProgress();
-
-  renderOverview(progress, allLessons);
-
-  const choices = allLessons.map((lesson) => {
-    const isCompleted = progress.completedLessons.includes(lesson.id);
-    const isUnlocked = isLessonUnlocked(lesson.id, allLessons);
-
-    let prefix = '🔒';
-    if (isCompleted) prefix = '✅';
-    else if (isUnlocked) prefix = '📍';
-
-    return {
-      name: `${prefix} [${lesson.id}] ${lesson.title} (${lesson.unitLevel})`,
-      value: lesson.id,
-      disabled: !isUnlocked ? '(Locked)' : false
-    };
-  });
-
-  choices.push({ name: '🔙 Back to Main Menu', value: 'BACK' });
-
-  const chosenLessonId = await select({
-    message: 'Select a lesson to start:',
-    choices
-  });
-
-  if (chosenLessonId === 'BACK') return;
-
-  const lesson = allLessons.find((l) => l.id === chosenLessonId);
-
-  // Clear and display clean lesson header
+async function executeSingleLesson(lesson, stats) {
   clearScreen();
   printAppHeader(`Lesson ${lesson.id}: ${lesson.title}`);
 
@@ -294,11 +259,13 @@ export async function runPath(stats) {
 
   rl.close();
 
-  // Evaluate Lesson Completion
   clearScreen();
   printAppHeader(`Lesson ${lesson.id} Complete`);
 
-  if (passedCount >= Math.ceil(exercises.length * 0.7)) {
+  const passedThreshold = Math.ceil(exercises.length * 0.7);
+  const isPassed = passedCount >= passedThreshold;
+
+  if (isPassed) {
     const earnedXp = 50 + passedCount * 10;
     completeLesson(lesson.id, earnedXp);
     console.log(
@@ -319,7 +286,7 @@ export async function runPath(stats) {
     console.log(
       boxen(
         `${chalk.bold.yellow('⚠️ LESSON INCOMPLETE')}\n\n` +
-        `${chalk.white(`Score: ${passedCount}/${exercises.length} exercises`)}\n` +
+        `${chalk.white(`Score: ${passedCount}/${exercises.length} exercises (needed ${passedThreshold})`)}\n` +
         `${chalk.gray('Review the theory and try again to unlock the next level!')}`,
         {
           padding: 1,
@@ -329,5 +296,75 @@ export async function runPath(stats) {
         }
       )
     );
+  }
+
+  return isPassed;
+}
+
+export async function runPath(stats) {
+  clearScreen();
+  printAppHeader('Learning Path');
+
+  const allLessons = getAllLessons();
+  const progress = loadProgress();
+
+  renderOverview(progress, allLessons);
+
+  const choices = allLessons.map((lesson) => {
+    const isCompleted = progress.completedLessons.includes(lesson.id);
+    const isUnlocked = isLessonUnlocked(lesson.id, allLessons);
+
+    let prefix = '🔒';
+    if (isCompleted) prefix = '✅';
+    else if (isUnlocked) prefix = '📍';
+
+    return {
+      name: `${prefix} [${lesson.id}] ${lesson.title} (${lesson.unitLevel})`,
+      value: lesson.id,
+      disabled: !isUnlocked ? '(Locked)' : false
+    };
+  });
+
+  choices.push({ name: '🔙 Back to Main Menu', value: 'BACK' });
+
+  const chosenLessonId = await select({
+    message: 'Select a lesson to start:',
+    choices
+  });
+
+  if (chosenLessonId === 'BACK') return;
+
+  let currentLesson = allLessons.find((l) => l.id === chosenLessonId);
+
+  while (currentLesson) {
+    const isPassed = await executeSingleLesson(currentLesson, stats);
+
+    if (isPassed) {
+      const currentIndex = allLessons.findIndex((l) => l.id === currentLesson.id);
+      const nextLesson = allLessons[currentIndex + 1];
+
+      if (nextLesson) {
+        const continueNext = await confirm({
+          message: `Continue directly to next lesson (${nextLesson.id}: ${nextLesson.title})?`,
+          default: true
+        });
+
+        if (continueNext) {
+          currentLesson = nextLesson;
+          continue;
+        }
+      }
+      break;
+    } else {
+      const retryLesson = await confirm({
+        message: `Retry this lesson (${currentLesson.id}: ${currentLesson.title})?`,
+        default: true
+      });
+
+      if (retryLesson) {
+        continue;
+      }
+      break;
+    }
   }
 }
