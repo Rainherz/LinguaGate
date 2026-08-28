@@ -18,6 +18,7 @@ import { runReview } from './modes/review.js';
 import { runListening } from './modes/listening.js';
 import { runVerbsGym } from './modes/verbs.js';
 import { runExportMode } from './modes/export.js';
+import { runSettings } from './modes/settings.js';
 
 const MODES = {
   PATH: '🗺️  Learning Path (CEFR A1 ➔ C1)',
@@ -29,6 +30,7 @@ const MODES = {
   REVIEW: '🧠 Review Mistakes (SRS / SM-2)',
   PLACEMENT: '🎓 Placement Test (Calibrate Level)',
   EXPORT: '📦 Export to Anki / Study Deck',
+  SETTINGS: '⚙️  Settings & Preferences',
   CHAT: '💬 Free Chat',
   TRANSLATE: '🌍 Translate (ES → EN)',
   FILLBLANK: '✏️  Fill in the Blank',
@@ -116,11 +118,12 @@ async function main() {
     if (modeKey === 'PLACEMENT')  await runPlacementTest();
     if (modeKey === 'REVIEW')     await runReview(stats);
     if (modeKey === 'EXPORT')     await runExportMode();
+    if (modeKey === 'SETTINGS')   await runSettings();
     if (modeKey === 'CHAT')       await runChat(stats);
     if (modeKey === 'TRANSLATE')  await runTranslate(stats, difficulty);
     if (modeKey === 'FILLBLANK')  await runFillBlank(stats, difficulty);
 
-    if (modeKey !== 'PLACEMENT' && modeKey !== 'EXPORT') {
+    if (modeKey !== 'PLACEMENT' && modeKey !== 'EXPORT' && modeKey !== 'SETTINGS') {
       stats.print();
       recordSession(stats.getSummary());
     }

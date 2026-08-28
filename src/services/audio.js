@@ -3,24 +3,34 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { loadConfig } from './config.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_DIR = join(__dirname, '../../data/cache/audio');
 
-let detectedPlayer = null;
-function detectPlayer() {
-  if (detectedPlayer) return detectedPlayer;
-  const candidates = [
-    { type: 'ffplay', cmd: 'ffplay', args: '-nodisp -autoexit -loglevel quiet' },
-    { type: 'mpg123', cmd: 'mpg123', args: '-q' },
-    { type: 'aplay', cmd: 'aplay', args: '-q' }
-  ];
+const ALL_CANDIDATES = {
+  ffplay: { type: 'ffplay', cmd: 'ffplay', args: '-nodisp -autoexit -loglevel quiet' },
+  mpg123: { type: 'mpg123', cmd: 'mpg123', args: '-q' },
+  aplay: { type: 'aplay', cmd: 'aplay', args: '-q' }
+};
 
-  for (const c of candidates) {
+function detectPlayer() {
+  const config = loadConfig();
+  if (config.audioPlayer === 'muted') return null;
+
+  if (config.audioPlayer && config.audioPlayer !== 'auto' && ALL_CANDIDATES[config.audioPlayer]) {
+    try {
+      execSync(`which ${ALL_CANDIDATES[config.audioPlayer].cmd}`, { stdio: 'ignore' });
+      return ALL_CANDIDATES[config.audioPlayer];
+    } catch {
+      // Fallback to auto
+    }
+  }
+
+  for (const c of Object.values(ALL_CANDIDATES)) {
     try {
       execSync(`which ${c.cmd}`, { stdio: 'ignore' });
-      detectedPlayer = c;
-      return detectedPlayer;
+      return c;
     } catch {
       // continue
     }
@@ -64,11 +74,15 @@ async function fetchAndCacheAudio(text) {
 /**
  * Plays audio at normal (1.0x), slow (0.7x), or ultra slow (0.4x).
  * Uses digital audio time-stretching filter (atempo) without pitch distortion.
+ * @param {string} text
+ * @param {{ speed?: string }} [options]
  */
-export async function playAudio(text, { speed = 'normal' } = {}) {
+export async function playAudio(text, options = {}) {
+  const config = loadConfig();
+  const activeSpeed = options.speed || config.audioSpeed || 'normal';
   const player = detectPlayer();
   if (!player) {
-    return { played: false, reason: 'No audio player detected.' };
+    return { played: false, reason: 'No audio player detected or audio muted in settings.' };
   }
 
   try {
@@ -76,15 +90,15 @@ export async function playAudio(text, { speed = 'normal' } = {}) {
 
     let speedArgs = player.args;
     if (player.type === 'ffplay') {
-      if (speed === 'slow') {
+      if (activeSpeed === 'slow') {
         speedArgs += ' -af "atempo=0.7"';
-      } else if (speed === 'ultra') {
+      } else if (activeSpeed === 'ultra' || activeSpeed === 'ultra-slow') {
         speedArgs += ' -af "atempo=0.5,atempo=0.8"';
       }
     } else if (player.type === 'mpg123') {
-      if (speed === 'slow') {
+      if (activeSpeed === 'slow') {
         speedArgs += ' --pitch -0.3';
-      } else if (speed === 'ultra') {
+      } else if (activeSpeed === 'ultra' || activeSpeed === 'ultra-slow') {
         speedArgs += ' --pitch -0.5';
       }
     }
