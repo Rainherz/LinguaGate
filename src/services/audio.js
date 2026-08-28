@@ -116,3 +116,19 @@ export async function playAudio(text, options = {}) {
     return { played: false, reason: err.message };
   }
 }
+
+/**
+ * Plays audio at slow (0.7x) cadence.
+ * @param {string} text
+ */
+export async function playAudioSlow(text) {
+  return playAudio(text, { speed: 'slow' });
+}
+
+/**
+ * Plays audio at ultra-slow (0.4x) cadence.
+ * @param {string} text
+ */
+export async function playAudioUltraSlow(text) {
+  return playAudio(text, { speed: 'ultra-slow' });
+}

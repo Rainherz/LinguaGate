@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process';
 
-function callAgy(prompt) {
+export function callAgy(prompt) {
   const escaped = prompt.replace(/'/g, `'\\''`);
   const raw = execSync(`agy --print='${escaped}'`, {
     encoding: 'utf-8',
