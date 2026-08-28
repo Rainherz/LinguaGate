@@ -88,6 +88,7 @@ async function main() {
         { name: MODES.REVIEW,     value: 'REVIEW' },
         { name: MODES.PLACEMENT,  value: 'PLACEMENT' },
         { name: MODES.EXPORT,     value: 'EXPORT' },
+        { name: MODES.SETTINGS,   value: 'SETTINGS' },
         { name: MODES.CHAT,       value: 'CHAT' },
         { name: MODES.TRANSLATE,  value: 'TRANSLATE' },
         { name: MODES.FILLBLANK,  value: 'FILLBLANK' },
@@ -98,7 +99,7 @@ async function main() {
     if (!modeKey || modeKey === 'QUIT' || modeKey === 'BACK') break;
 
     let difficulty = 'beginner';
-    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK', 'ROLEPLAY', 'SLANG', 'LISTEN', 'VERBS', 'EXPORT'].includes(modeKey)) {
+    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK', 'ROLEPLAY', 'SLANG', 'LISTEN', 'VERBS', 'EXPORT', 'SETTINGS'].includes(modeKey)) {
       difficulty = await getDifficulty();
       if (!difficulty || difficulty === 'BACK') {
         banner();
