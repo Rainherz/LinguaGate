@@ -16,8 +16,8 @@ export async function runListening(stats) {
     console.log(
       boxen(
         `${chalk.bold.yellow('⚠️ Audio Player Not Detected')}\n\n` +
-        `${chalk.white('To hear spoken audio in terminal, please install mpg123:')}\n` +
-        `${chalk.cyan('sudo pacman -S mpg123')} ${chalk.gray('(Arch)')} or ${chalk.cyan('sudo apt install mpg123')} ${chalk.gray('(Debian/Ubuntu)')}`,
+        `${chalk.white('To hear spoken audio in terminal, please install mpg123 or ffplay:')}\n` +
+        `${chalk.cyan('sudo pacman -S mpg123 ffmpeg')} ${chalk.gray('(Arch)')}`,
         {
           padding: 1,
           margin: 1,
@@ -26,7 +26,7 @@ export async function runListening(stats) {
         }
       )
     );
-    const cont = await safeConfirm({ message: 'Return to Main Menu?', default: true });
+    await safeConfirm({ message: 'Return to Main Menu?', default: true });
     return;
   }
 
@@ -52,30 +52,31 @@ export async function runListening(stats) {
     clearScreen();
     printAppHeader(`Listening Lab (${difficulty.toUpperCase()}) • Audio #${challengeCount}`);
 
-    const loadSpinner = ora({ text: 'Generating audio phrase...', color: 'cyan', indent: 2 }).start();
+    const loadSpinner = ora({ text: 'Generating audio challenge...', color: 'cyan', indent: 2 }).start();
     let phrase;
     try {
       phrase = getListeningPhrase(difficulty);
       loadSpinner.stop();
     } catch (err) {
-      loadSpinner.fail('Failed to generate phrase');
+      loadSpinner.fail('Failed to generate audio phrase');
       break;
     }
 
-    // Play Audio
+    // Play Audio Initial (Normal)
     const playSpinner = ora({ text: '🔊 Playing audio through speakers...', color: 'yellow', indent: 2 }).start();
-    await playAudio(phrase.phrase, { isSlow: false });
+    await playAudio(phrase.phrase, { speed: 'normal' });
     playSpinner.succeed(chalk.green('Audio played! 🔊'));
 
     let transcription = '';
     while (!transcription) {
       console.log(
         boxen(
-          `${chalk.bold.white('Instructions:')}\n` +
+          `${chalk.bold.white('Controls:')}\n` +
           `  Type what you heard and press ${chalk.bold.green('[ENTER]')}\n` +
-          `  Type ${chalk.yellow('[r]')} to replay normal speed\n` +
-          `  Type ${chalk.cyan('[s]')} to replay slow speed (0.25x)\n` +
-          `  Type ${chalk.red('/quit')} to exit`,
+          `  ${chalk.yellow('[r]')} Replay normal speed (1.0x)\n` +
+          `  ${chalk.cyan('[s]')} Replay slow speed (0.7x)\n` +
+          `  ${chalk.magenta('[u]')} Replay ultra slow (0.4x - camera lenta)\n` +
+          `  ${chalk.red('/quit')} Exit to menu`,
           {
             padding: { top: 0, bottom: 0, left: 1, right: 1 },
             margin: { top: 1, bottom: 1, left: 1, right: 1 },
@@ -88,22 +89,34 @@ export async function runListening(stats) {
 
       const input = (await ask(rl, chalk.bold.green('  Your transcription › '))).trim();
 
-      if (input === '/quit') {
+      if (!input) {
+        console.log(chalk.yellow('\n  ⚠️ Escribí lo que escuchaste, o usá [r] / [s] / [u] para repetir el audio.\n'));
+        continue;
+      }
+
+      if (input === '/quit' || input.toLowerCase() === 'exit') {
         running = false;
         break;
       }
 
       if (input.toLowerCase() === 'r') {
-        const rSpinner = ora({ text: '🔊 Replaying audio (normal)...', color: 'yellow', indent: 2 }).start();
-        await playAudio(phrase.phrase, { isSlow: false });
-        rSpinner.succeed(chalk.green('Replayed!'));
+        const rSpinner = ora({ text: '🔊 Replaying (1.0x normal)...', color: 'yellow', indent: 2 }).start();
+        await playAudio(phrase.phrase, { speed: 'normal' });
+        rSpinner.succeed(chalk.green('Played at normal speed!'));
         continue;
       }
 
       if (input.toLowerCase() === 's') {
-        const sSpinner = ora({ text: '🔊 Replaying audio (slow)...', color: 'cyan', indent: 2 }).start();
-        await playAudio(phrase.phrase, { isSlow: true });
-        sSpinner.succeed(chalk.cyan('Replayed slowly!'));
+        const sSpinner = ora({ text: '🔊 Replaying (0.7x slow)...', color: 'cyan', indent: 2 }).start();
+        await playAudio(phrase.phrase, { speed: 'slow' });
+        sSpinner.succeed(chalk.cyan('Played slowly!'));
+        continue;
+      }
+
+      if (input.toLowerCase() === 'u') {
+        const uSpinner = ora({ text: '🔊 Replaying (0.4x ultra slow)...', color: 'magenta', indent: 2 }).start();
+        await playAudio(phrase.phrase, { speed: 'ultra' });
+        uSpinner.succeed(chalk.magenta('Played ultra slowly!'));
         continue;
       }
 
@@ -126,7 +139,7 @@ export async function runListening(stats) {
     console.log();
     if (evaluation.isCorrect) {
       if (evaluation.score === 100) {
-        console.log(chalk.bold.green('  🎉 Perfect Match! (100/100) — Incredible ear!'));
+        console.log(chalk.bold.green('  🎉 Perfect Match! (100/100) — Oído impecable!'));
       } else {
         console.log(chalk.bold.green(`  ✔ Accepted! (${evaluation.score}/100)`));
       }
@@ -163,7 +176,7 @@ export async function runListening(stats) {
     }
 
     // Play final review audio
-    await playAudio(phrase.phrase, { isSlow: false });
+    await playAudio(phrase.phrase, { speed: 'normal' });
 
     printDivider();
     const again = await safeConfirm({ message: 'Next audio challenge?', default: true });

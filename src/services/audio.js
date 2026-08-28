@@ -7,15 +7,13 @@ import { createHash } from 'node:crypto';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_DIR = join(__dirname, '../../data/cache/audio');
 
-// Detect available player once
 let detectedPlayer = null;
 function detectPlayer() {
   if (detectedPlayer) return detectedPlayer;
   const candidates = [
-    { cmd: 'mpg123', args: '-q' },
-    { cmd: 'ffplay', args: '-nodisp -autoexit -loglevel quiet' },
-    { cmd: 'paplay', args: '' },
-    { cmd: 'aplay', args: '-q' }
+    { type: 'ffplay', cmd: 'ffplay', args: '-nodisp -autoexit -loglevel quiet' },
+    { type: 'mpg123', cmd: 'mpg123', args: '-q' },
+    { type: 'aplay', cmd: 'aplay', args: '-q' }
   ];
 
   for (const c of candidates) {
@@ -24,7 +22,7 @@ function detectPlayer() {
       detectedPlayer = c;
       return detectedPlayer;
     } catch {
-      // not found, continue
+      // continue
     }
   }
   return null;
@@ -34,26 +32,19 @@ export function isAudioSupported() {
   return detectPlayer() !== null;
 }
 
-/**
- * Downloads TTS MP3 from Google Translate TTS CDN and caches to disk.
- */
-async function fetchAndCacheAudio(text, isSlow = false) {
+async function fetchAndCacheAudio(text) {
   if (!existsSync(CACHE_DIR)) mkdirSync(CACHE_DIR, { recursive: true });
 
-  const hash = createHash('md5')
-    .update(`${text}_${isSlow ? 'slow' : 'normal'}`)
-    .digest('hex');
+  const hash = createHash('md5').update(text).digest('hex');
   const filePath = join(CACHE_DIR, `${hash}.mp3`);
 
   if (existsSync(filePath)) {
     return filePath;
   }
 
-  // Google TTS URL
-  const speed = isSlow ? '0.24' : '1';
   const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${encodeURIComponent(
     text.slice(0, 180)
-  )}&ttsspeed=${speed}`;
+  )}&ttsspeed=1`;
 
   const res = await fetch(url, {
     headers: {
@@ -71,18 +62,35 @@ async function fetchAndCacheAudio(text, isSlow = false) {
 }
 
 /**
- * Plays the spoken audio of the given text in the background.
+ * Plays audio at normal (1.0x), slow (0.7x), or ultra slow (0.4x).
+ * Uses digital audio time-stretching filter (atempo) without pitch distortion.
  */
-export async function playAudio(text, { isSlow = false } = {}) {
+export async function playAudio(text, { speed = 'normal' } = {}) {
   const player = detectPlayer();
   if (!player) {
-    return { played: false, reason: 'No compatible audio player (mpg123/ffplay) detected.' };
+    return { played: false, reason: 'No audio player detected.' };
   }
 
   try {
-    const filePath = await fetchAndCacheAudio(text, isSlow);
+    const filePath = await fetchAndCacheAudio(text);
+
+    let speedArgs = player.args;
+    if (player.type === 'ffplay') {
+      if (speed === 'slow') {
+        speedArgs += ' -af "atempo=0.7"';
+      } else if (speed === 'ultra') {
+        speedArgs += ' -af "atempo=0.4"';
+      }
+    } else if (player.type === 'mpg123') {
+      if (speed === 'slow') {
+        speedArgs += ' --pitch -0.3';
+      } else if (speed === 'ultra') {
+        speedArgs += ' --pitch -0.6';
+      }
+    }
+
     return new Promise((resolve) => {
-      exec(`${player.cmd} ${player.args} "${filePath}"`, (err) => {
+      exec(`${player.cmd} ${speedArgs} "${filePath}"`, (err) => {
         if (err) {
           resolve({ played: false, reason: err.message });
         } else {
