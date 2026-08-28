@@ -106,13 +106,28 @@ Reply ONLY with a raw JSON object (no markdown, no code fences):
 }
 
 export function getMistakeExercise(errorType) {
-  const prompt = `Create a short English grammar exercise targeting this specific error type: "${errorType}".
+  const prompt = `You are a personalized English grammar tutor helping a Spanish speaker review their past mistake.
+Error/Rule: "${errorType}"
+
+Create a targeted review flashcard.
+Provide:
+1. ruleRecap: 1-2 sentence crystal clear explanation in Spanish of what this rule is and how to fix it.
+2. tip: a quick actionable rule of thumb in Spanish.
+3. exercise: clear exercise instruction + the sentence to fix or complete.
+4. hint: a subtle clue pointing to where the error is.
+5. answer: the exact correct sentence or word.
+6. explanation: why this answer is correct in English.
+
 Reply ONLY with a raw JSON object (no markdown, no code fences):
-  exercise: string — an instruction and a sentence or question for the user to fix or answer
-  answer: string — the correct answer
-  explanation: string — brief explanation of the rule`;
+  ruleRecap: string
+  tip: string
+  exercise: string
+  hint: string
+  answer: string
+  explanation: string`;
   return JSON.parse(callAgy(prompt));
 }
+
 
 export function getLessonPhrase(lesson) {
   const seed = Math.floor(Math.random() * 10000);
