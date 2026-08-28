@@ -3,8 +3,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
-import { recordError, getDueSrsCards, reviewSrsCard, getTopErrors, updateStreak, loadHistory } from '../src/services/history.js';
-import { writeJsonAtomic } from '../src/services/storage.js';
+import { recordError, reviewSrsCard, getTopErrors, loadHistory } from '../src/services/history.js';
 
 describe('SRS (Spaced Repetition / SM-2) Service', () => {
   let tempDir;

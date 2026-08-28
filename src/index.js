@@ -116,7 +116,7 @@ async function main() {
     if (modeKey === 'PLACEMENT')  await runPlacementTest();
     if (modeKey === 'REVIEW')     await runReview(stats);
     if (modeKey === 'EXPORT')     await runExportMode();
-    if (modeKey === 'CHAT')       await runChat(stats, difficulty);
+    if (modeKey === 'CHAT')       await runChat(stats);
     if (modeKey === 'TRANSLATE')  await runTranslate(stats, difficulty);
     if (modeKey === 'FILLBLANK')  await runFillBlank(stats, difficulty);
 

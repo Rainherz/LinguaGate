@@ -9,20 +9,12 @@ import {
   getLessonPhrase,
   getLessonFillBlank,
   getLessonChatPrompt,
-  getLessonTheory,
-  checkTranslation,
-  checkGrammar,
-  chatReply
+  getLessonTheory
 } from '../services/agy.js';
 import { loadProgress, completeLesson, isLessonUnlocked } from '../services/progress.js';
-import { recordError, updateStreak } from '../services/history.js';
 import {
   clearScreen,
   printAppHeader,
-  printStreak,
-  printDivider,
-  printError,
-  printBotReply,
   printTheoryCard
 } from '../ui/display.js';
 
@@ -146,7 +138,7 @@ async function executeSingleLesson(lesson, stats) {
     theorySpinner.stop();
     printTheoryCard(theory, lesson);
     await safeInput({ message: 'Press [ENTER] to start the exercises ›' });
-  } catch (err) {
+  } catch {
     theorySpinner.stop();
   }
 

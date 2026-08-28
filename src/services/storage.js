@@ -41,7 +41,7 @@ export function readJson(filePath, defaultValue) {
       throw new Error(`File ${filePath} is empty`);
     }
     return JSON.parse(raw);
-  } catch (primaryErr) {
+  } catch {
     const backupPath = `${filePath}.bak`;
     if (existsSync(backupPath)) {
       try {

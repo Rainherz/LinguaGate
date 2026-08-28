@@ -1,6 +1,5 @@
 import chalk from 'chalk';
-import { updateStreak } from '../services/history.js';
-import { clearScreen, printAppHeader, printStreak, printDivider } from '../ui/display.js';
+import { clearScreen, printAppHeader } from '../ui/display.js';
 import { safeInput } from '../ui/prompt.js';
 
 const QUICK_QUESTIONS = [
@@ -39,6 +38,7 @@ export async function runTimeAttack(stats) {
     const remainingSecs = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000));
     const q = questions[qIndex];
 
+    console.log(`\n  ${chalk.bold.yellow('Q:')} ${chalk.bold.white(q.prompt)} ${chalk.dim(`[${remainingSecs}s left]`)}`);
     const answer = (await safeInput({ message: '›' })).trim();
 
     // Check if time expired during question
@@ -58,8 +58,6 @@ export async function runTimeAttack(stats) {
     }
     qIndex++;
   }
-
-  rl.close();
 
   const total = score + mistakes;
   const accuracy = total > 0 ? Math.round((score / total) * 100) : 0;

@@ -25,7 +25,7 @@ export async function evaluateTranslationExercise({
   try {
     evaluation = checkTranslation(spanish, input, expectedEnglish);
     evalSpinner.stop();
-  } catch (err) {
+  } catch {
     evalSpinner.fail('Evaluation failed');
     return { isCorrect: false, score: 0 };
   }
@@ -121,7 +121,7 @@ export async function evaluateChatExercise({
   try {
     result = checkGrammar(input);
     checkSpinner.stop();
-  } catch (err) {
+  } catch {
     checkSpinner.fail('Check failed');
     return { isCorrect: false };
   }

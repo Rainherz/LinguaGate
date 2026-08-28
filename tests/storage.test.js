@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
-import { readJson, writeJsonAtomic, ensureDir } from '../src/services/storage.js';
+import { readJson, writeJsonAtomic } from '../src/services/storage.js';
 
 describe('Storage Service (Atomic Persistence & Recovery)', () => {
   let tempDir;
@@ -62,6 +62,7 @@ describe('Storage Service (Atomic Persistence & Recovery)', () => {
     writeJsonAtomic(filePath, { status: 'healthy', value: 42 });
     // 2. Second valid write creates the backup with { status: 'healthy', value: 42 }
     writeJsonAtomic(filePath, { status: 'healthy_v2', value: 43 });
+    assert.ok(existsSync(backupPath), 'Backup file should be created');
 
     // 3. Intentionally corrupt the primary file (e.g. partial disk write / sudden termination)
     writeFileSync(filePath, '{ invalid json partial write...', 'utf-8');

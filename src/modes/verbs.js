@@ -22,17 +22,13 @@ export async function runVerbsGym(stats) {
 
   if (!levelChoice || levelChoice === 'BACK') return;
 
-  let pool = [];
-  if (levelChoice === 'A1-A2') {
-    pool = [...getVerbsByLevel('A1'), ...getVerbsByLevel('A2')];
-  } else if (levelChoice === 'B2-C1') {
-    pool = [...getVerbsByLevel('B2'), ...getVerbsByLevel('C1')];
-  } else {
-    pool = getVerbsByLevel(levelChoice);
-  }
-
-  // Shuffle pool
-  pool = pool.sort(() => Math.random() - 0.5);
+  const pool = (
+    levelChoice === 'A1-A2'
+      ? [...getVerbsByLevel('A1'), ...getVerbsByLevel('A2')]
+      : levelChoice === 'B2-C1'
+      ? [...getVerbsByLevel('B2'), ...getVerbsByLevel('C1')]
+      : getVerbsByLevel(levelChoice)
+  ).sort(() => Math.random() - 0.5);
 
   let round = 0;
   let running = true;

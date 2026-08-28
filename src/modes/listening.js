@@ -4,7 +4,7 @@ import boxen from 'boxen';
 import { playAudio, isAudioSupported } from '../services/audio.js';
 import { getListeningPhrase, evaluateListening } from '../services/agy.js';
 import { updateStreak, recordError } from '../services/history.js';
-import { clearScreen, printAppHeader, printStreak, printDivider } from '../ui/display.js';
+import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeSelect, safeConfirm, safeInput } from '../ui/prompt.js';
 
 export async function runListening(stats) {
@@ -54,7 +54,7 @@ export async function runListening(stats) {
     try {
       phrase = getListeningPhrase(difficulty);
       loadSpinner.stop();
-    } catch (err) {
+    } catch {
       loadSpinner.fail('Failed to generate audio phrase');
       break;
     }
