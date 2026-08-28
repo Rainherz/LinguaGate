@@ -7,6 +7,7 @@ import { loadHistory, recordSession } from './services/history.js';
 import { loadProgress } from './services/progress.js';
 import { loadConfig, getGreeting } from './services/config.js';
 import { formatDailyGoalBar } from './services/activity.js';
+import { saveWordOfDay } from './services/vocabulary.js';
 import { SessionStats } from './services/stats.js';
 import { banner, printWordOfDay } from './ui/display.js';
 import { runOnboardingWizard } from './modes/onboarding.js';
@@ -22,6 +23,7 @@ import { runReview } from './modes/review.js';
 import { runListening } from './modes/listening.js';
 import { runVerbsGym } from './modes/verbs.js';
 import { runCollocationsGym } from './modes/collocations.js';
+import { runVocabularyVault } from './modes/vocabulary.js';
 import { runExportMode } from './modes/export.js';
 import { runSettings } from './modes/settings.js';
 
@@ -30,6 +32,7 @@ const MODES = {
   LISTEN: '🎧 Listening & Dictation Lab',
   VERBS: '⚡ Irregular Verbs Gym (3 Forms)',
   COLLOCATIONS: '🧩 Prepositions & Collocations Gym',
+  VOCAB: '📚 Vocabulary Vault & Daily Quiz',
   ROLEPLAY: '🎭 Roleplay Missions (Real Scenarios)',
   SLANG: '💬 Phrasal Verbs & Slang Vault',
   TIMEATTACK: '⚡ Time Attack (60s Rapid Fire)',
@@ -69,6 +72,7 @@ async function main() {
     const wod = getWordOfDay();
     wodSpinner.stop();
     printWordOfDay(wod);
+    saveWordOfDay(wod);
   } catch {
     wodSpinner.stop();
   }
@@ -97,6 +101,7 @@ async function main() {
         { name: MODES.LISTEN,       value: 'LISTEN' },
         { name: MODES.VERBS,        value: 'VERBS' },
         { name: MODES.COLLOCATIONS, value: 'COLLOCATIONS' },
+        { name: MODES.VOCAB,        value: 'VOCAB' },
         { name: MODES.ROLEPLAY,     value: 'ROLEPLAY' },
         { name: MODES.SLANG,        value: 'SLANG' },
         { name: MODES.TIMEATTACK,   value: 'TIMEATTACK' },
@@ -114,7 +119,7 @@ async function main() {
     if (!modeKey || modeKey === 'QUIT' || modeKey === 'BACK') break;
 
     let difficulty = 'beginner';
-    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK', 'ROLEPLAY', 'SLANG', 'LISTEN', 'VERBS', 'COLLOCATIONS', 'EXPORT', 'SETTINGS'].includes(modeKey)) {
+    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK', 'ROLEPLAY', 'SLANG', 'LISTEN', 'VERBS', 'COLLOCATIONS', 'VOCAB', 'EXPORT', 'SETTINGS'].includes(modeKey)) {
       difficulty = await getDifficulty();
       if (!difficulty || difficulty === 'BACK') {
         banner();
@@ -129,6 +134,7 @@ async function main() {
     if (modeKey === 'LISTEN')       await runListening(stats);
     if (modeKey === 'VERBS')        await runVerbsGym(stats);
     if (modeKey === 'COLLOCATIONS') await runCollocationsGym(stats);
+    if (modeKey === 'VOCAB')        await runVocabularyVault(stats);
     if (modeKey === 'ROLEPLAY')     await runRoleplay(stats);
     if (modeKey === 'SLANG')        await runSlang(stats);
     if (modeKey === 'TIMEATTACK')   await runTimeAttack(stats);
