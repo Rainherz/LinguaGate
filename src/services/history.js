@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readJson, writeJsonAtomic } from './storage.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = join(__dirname, '../../data');
@@ -15,23 +15,15 @@ const DEFAULT = {
 };
 
 export function loadHistory() {
-  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
-  if (!existsSync(HISTORY_FILE)) {
-    writeFileSync(HISTORY_FILE, JSON.stringify(DEFAULT, null, 2));
-    return structuredClone(DEFAULT);
-  }
-  try {
-    const data = JSON.parse(readFileSync(HISTORY_FILE, 'utf-8'));
-    if (!data.srsCards) data.srsCards = {};
-    return data;
-  } catch {
-    return structuredClone(DEFAULT);
-  }
+  const data = readJson(HISTORY_FILE, DEFAULT);
+  if (!data.srsCards) data.srsCards = {};
+  if (!Array.isArray(data.errors)) data.errors = [];
+  if (!Array.isArray(data.sessions)) data.sessions = [];
+  return data;
 }
 
 export function saveHistory(data) {
-  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
-  writeFileSync(HISTORY_FILE, JSON.stringify(data, null, 2));
+  writeJsonAtomic(HISTORY_FILE, data);
 }
 
 export function recordError(errorType, original, corrected) {
