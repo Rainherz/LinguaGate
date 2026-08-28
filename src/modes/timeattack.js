@@ -1,9 +1,7 @@
-import readline from 'node:readline';
-import { select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import { updateStreak } from '../services/history.js';
 import { clearScreen, printAppHeader, printStreak, printDivider } from '../ui/display.js';
-import { ask } from '../ui/prompt.js';
+import { safeInput } from '../ui/prompt.js';
 
 const QUICK_QUESTIONS = [
   { prompt: 'She (dont / doesnt) know the answer.', answer: 'doesnt', hint: 'Third person singular' },
@@ -28,8 +26,7 @@ export async function runTimeAttack(stats) {
   // Shuffle questions
   const questions = [...QUICK_QUESTIONS].sort(() => Math.random() - 0.5);
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  await ask(rl, chalk.bold.green('  Press [ENTER] to start the 60-second timer! '));
+  await safeInput({ message: 'Press [ENTER] to start the 60-second timer! ' });
 
   const startTime = Date.now();
   const DURATION_MS = 60 * 1000;
@@ -42,8 +39,7 @@ export async function runTimeAttack(stats) {
     const remainingSecs = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000));
     const q = questions[qIndex];
 
-    console.log(chalk.bold.magenta(`\n  ⏱️  [${remainingSecs}s left] `) + chalk.bold.white(q.prompt));
-    const answer = (await ask(rl, chalk.bold.green('  › '))).trim();
+    const answer = (await safeInput({ message: '›' })).trim();
 
     // Check if time expired during question
     if (Date.now() - startTime >= DURATION_MS) {

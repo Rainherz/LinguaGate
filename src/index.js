@@ -16,15 +16,19 @@ import { runTranslate } from './modes/translate.js';
 import { runFillBlank } from './modes/fillblank.js';
 import { runReview } from './modes/review.js';
 import { runListening } from './modes/listening.js';
+import { runVerbsGym } from './modes/verbs.js';
+import { runExportMode } from './modes/export.js';
 
 const MODES = {
   PATH: '🗺️  Learning Path (CEFR A1 ➔ C1)',
   LISTEN: '🎧 Listening & Dictation Lab',
+  VERBS: '⚡ Irregular Verbs Gym (3 Forms)',
   ROLEPLAY: '🎭 Roleplay Missions (Real Scenarios)',
   SLANG: '💬 Phrasal Verbs & Slang Vault',
   TIMEATTACK: '⚡ Time Attack (60s Rapid Fire)',
   REVIEW: '🧠 Review Mistakes (SRS / SM-2)',
   PLACEMENT: '🎓 Placement Test (Calibrate Level)',
+  EXPORT: '📦 Export to Anki / Study Deck',
   CHAT: '💬 Free Chat',
   TRANSLATE: '🌍 Translate (ES → EN)',
   FILLBLANK: '✏️  Fill in the Blank',
@@ -75,11 +79,13 @@ async function main() {
       choices: [
         { name: MODES.PATH,       value: 'PATH' },
         { name: MODES.LISTEN,     value: 'LISTEN' },
+        { name: MODES.VERBS,      value: 'VERBS' },
         { name: MODES.ROLEPLAY,   value: 'ROLEPLAY' },
         { name: MODES.SLANG,      value: 'SLANG' },
         { name: MODES.TIMEATTACK, value: 'TIMEATTACK' },
         { name: MODES.REVIEW,     value: 'REVIEW' },
         { name: MODES.PLACEMENT,  value: 'PLACEMENT' },
+        { name: MODES.EXPORT,     value: 'EXPORT' },
         { name: MODES.CHAT,       value: 'CHAT' },
         { name: MODES.TRANSLATE,  value: 'TRANSLATE' },
         { name: MODES.FILLBLANK,  value: 'FILLBLANK' },
@@ -90,7 +96,7 @@ async function main() {
     if (!modeKey || modeKey === 'QUIT' || modeKey === 'BACK') break;
 
     let difficulty = 'beginner';
-    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK', 'ROLEPLAY', 'SLANG', 'LISTEN'].includes(modeKey)) {
+    if (!['REVIEW', 'PATH', 'PLACEMENT', 'TIMEATTACK', 'ROLEPLAY', 'SLANG', 'LISTEN', 'VERBS', 'EXPORT'].includes(modeKey)) {
       difficulty = await getDifficulty();
       if (!difficulty || difficulty === 'BACK') {
         banner();
@@ -103,16 +109,18 @@ async function main() {
 
     if (modeKey === 'PATH')       await runPath(stats);
     if (modeKey === 'LISTEN')     await runListening(stats);
+    if (modeKey === 'VERBS')      await runVerbsGym(stats);
     if (modeKey === 'ROLEPLAY')   await runRoleplay(stats);
     if (modeKey === 'SLANG')      await runSlang(stats);
     if (modeKey === 'TIMEATTACK') await runTimeAttack(stats);
     if (modeKey === 'PLACEMENT')  await runPlacementTest();
     if (modeKey === 'REVIEW')     await runReview(stats);
+    if (modeKey === 'EXPORT')     await runExportMode();
     if (modeKey === 'CHAT')       await runChat(stats, difficulty);
     if (modeKey === 'TRANSLATE')  await runTranslate(stats, difficulty);
     if (modeKey === 'FILLBLANK')  await runFillBlank(stats, difficulty);
 
-    if (modeKey !== 'PLACEMENT') {
+    if (modeKey !== 'PLACEMENT' && modeKey !== 'EXPORT') {
       stats.print();
       recordSession(stats.getSummary());
     }
@@ -134,4 +142,3 @@ main().catch((err) => {
   console.error(chalk.red(`\n  Fatal error: ${err.message}\n`));
   process.exit(1);
 });
-

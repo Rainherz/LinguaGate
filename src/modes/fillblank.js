@@ -1,17 +1,14 @@
-import readline from 'node:readline';
 import ora from 'ora';
 import chalk from 'chalk';
 import { getFillBlank } from '../services/agy.js';
 import { evaluateFillBlankExercise } from '../services/evaluator.js';
-import { clearScreen, printAppHeader, printStreak, printDivider } from '../ui/display.js';
-import { ask } from '../ui/prompt.js';
+import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
+import { safeConfirm } from '../ui/prompt.js';
 
 export async function runFillBlank(stats, difficulty) {
   clearScreen();
   printAppHeader(`Fill in the Blank (${difficulty.toUpperCase()})`);
   console.log(chalk.gray('  Type the missing word or preposition. Type /quit to exit.\n'));
-
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
   let running = true;
   while (running) {
@@ -32,14 +29,13 @@ export async function runFillBlank(stats, difficulty) {
       hint: exercise.hint,
       explanation: exercise.explanation,
       grammarRule: 'Fill-in-the-blank Practice',
-      stats,
-      rl
+      stats
     });
 
-    printDivider();
-    const again = (await ask(rl, chalk.gray('  Next exercise? (y/n) › '))).trim().toLowerCase();
-    if (again !== 'y') running = false;
-  }
+    if (res.quit) break;
 
-  rl.close();
+    printDivider();
+    const again = await safeConfirm({ message: 'Next exercise?', default: true });
+    if (!again) running = false;
+  }
 }

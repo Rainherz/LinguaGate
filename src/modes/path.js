@@ -1,8 +1,7 @@
-import readline from 'node:readline';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { safeSelect, safeConfirm } from '../ui/prompt.js';
+import { safeSelect, safeConfirm, safeInput } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
@@ -66,7 +65,7 @@ function renderOverview(progress, allLessons) {
   console.log('  ' + unitBadges.join('  ') + '\n');
 }
 
-async function runExercise(exerciseType, lesson, stats, rl, index, total) {
+async function runExercise(exerciseType, lesson, stats, index, total) {
   console.log(chalk.bold.cyan(`  Exercise [${index + 1}/${total}] • `) + chalk.bold.white(exerciseType.toUpperCase()));
   console.log(chalk.dim(`  Topic: ${lesson.topic}`));
   console.log();
@@ -87,8 +86,7 @@ async function runExercise(exerciseType, lesson, stats, rl, index, total) {
       expectedEnglish: phrase.english,
       hint: phrase.hint,
       grammarRule: lesson.grammar,
-      stats,
-      rl
+      stats
     });
     return res.isCorrect;
   }
@@ -110,8 +108,7 @@ async function runExercise(exerciseType, lesson, stats, rl, index, total) {
       hint: exercise.hint,
       explanation: exercise.explanation,
       grammarRule: lesson.grammar,
-      stats,
-      rl
+      stats
     });
     return res.isCorrect;
   }
@@ -130,8 +127,7 @@ async function runExercise(exerciseType, lesson, stats, rl, index, total) {
     const res = await evaluateChatExercise({
       promptQuestion,
       grammarRule: lesson.grammar,
-      stats,
-      rl
+      stats
     });
     return res.isCorrect;
   }
@@ -144,14 +140,12 @@ async function executeSingleLesson(lesson, stats) {
   clearScreen();
   printAppHeader(`Lesson ${lesson.id}: ${lesson.title}`);
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
   const theorySpinner = ora({ text: 'Loading theory...', color: 'magenta', indent: 2 }).start();
   try {
     const theory = getLessonTheory(lesson);
     theorySpinner.stop();
     printTheoryCard(theory, lesson);
-    await ask(rl, chalk.bold.green('  Press [ENTER] to start the exercises › '));
+    await safeInput({ message: 'Press [ENTER] to start the exercises ›' });
   } catch (err) {
     theorySpinner.stop();
   }
@@ -168,7 +162,7 @@ async function executeSingleLesson(lesson, stats) {
     let attempts = 0;
     while (!passed && attempts < 2) {
       attempts++;
-      passed = await runExercise(exType, lesson, stats, rl, i, exercises.length);
+      passed = await runExercise(exType, lesson, stats, i, exercises.length);
       if (!passed && attempts < 2) {
         console.log(chalk.yellow('  🔄 Let’s retry this exercise to reinforce the rule.\n'));
       }
@@ -176,11 +170,9 @@ async function executeSingleLesson(lesson, stats) {
 
     if (passed) passedCount++;
     if (i < exercises.length - 1) {
-      await ask(rl, chalk.dim('  Press [ENTER] for next exercise › '));
+      await safeInput({ message: 'Press [ENTER] for next exercise ›' });
     }
   }
-
-  rl.close();
 
   clearScreen();
   printAppHeader(`Lesson ${lesson.id} Complete`);

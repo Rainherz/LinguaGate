@@ -1,5 +1,4 @@
-import readline from 'node:readline';
-import { safeSelect } from '../ui/prompt.js';
+import { safeSelect, safeInput } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
@@ -59,15 +58,17 @@ const SCENARIOS = [
 ];
 
 function renderMissionBoard(scenario, objectives) {
-  let list = `${chalk.bold.yellow('Mission Objectives:')}\n`;
-  objectives.forEach((obj) => {
-    const icon = obj.completed ? chalk.bold.green('✓ [DONE]') : chalk.dim('○ [PENDING]');
-    const text = obj.completed ? chalk.green(obj.text) : chalk.white(obj.text);
-    list += `  ${icon} ${text}\n`;
-  });
+  let checklist = `${chalk.bold.yellow('Objectives:')}\n`;
+  for (const obj of objectives) {
+    if (obj.completed) {
+      checklist += `  ${chalk.green('✓ [DONE]')}    ${chalk.white(obj.text)}\n`;
+    } else {
+      checklist += `  ${chalk.dim('○ [PENDING]')} ${chalk.gray(obj.text)}\n`;
+    }
+  }
 
   console.log(
-    boxen(list.trim(), {
+    boxen(checklist.trim(), {
       title: chalk.bold.cyan(` 🎯 ${scenario.title} `),
       titleAlignment: 'left',
       padding: { top: 0, bottom: 0, left: 1, right: 1 },
@@ -77,10 +78,6 @@ function renderMissionBoard(scenario, objectives) {
       dimBorder: true
     })
   );
-}
-
-function ask(rl, question) {
-  return new Promise((resolve) => rl.question(question, resolve));
 }
 
 export async function runRoleplay(stats) {
@@ -103,8 +100,6 @@ export async function runRoleplay(stats) {
 
   const chatHistory = [{ role: 'Character', text: scenario.initialMessage }];
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
   let missionComplete = false;
 
   while (!missionComplete) {
@@ -115,9 +110,9 @@ export async function runRoleplay(stats) {
     console.log(chalk.bold.blue(`  🤖 ${scenario.character}:`));
     console.log(`  "${chalk.white(chatHistory[chatHistory.length - 1].text)}"\n`);
 
-    const input = (await ask(rl, chalk.bold.green('  You › '))).trim();
+    const input = (await safeInput({ message: 'You ›' })).trim();
     if (!input) continue;
-    if (input === '/quit') break;
+    if (input === '/quit' || input.toLowerCase() === 'exit') break;
 
     const spinner = ora({ text: 'Evaluating response & objectives...', color: 'yellow', indent: 2 }).start();
     let turnResult;
@@ -136,7 +131,7 @@ export async function runRoleplay(stats) {
       updateStreak(false);
       stats.recordIncorrect(turnResult.grammar?.corrections?.[0] ?? 'roleplay grammar error');
       turnResult.grammar?.corrections?.forEach((c) => recordError(c, input, turnResult.grammar.correctedText));
-      await ask(rl, chalk.dim('  Press [ENTER] to retry your answer › '));
+      await safeInput({ message: 'Press [ENTER] to retry your answer ›' });
       continue;
     }
 
@@ -164,8 +159,6 @@ export async function runRoleplay(stats) {
       break;
     }
   }
-
-  rl.close();
 
   if (missionComplete) {
     clearScreen();

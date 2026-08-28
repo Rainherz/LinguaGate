@@ -1,11 +1,10 @@
-import readline from 'node:readline';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
 import { getMistakeExercise } from '../services/agy.js';
 import { getDueSrsCards, reviewSrsCard } from '../services/history.js';
-import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
-import { ask } from '../ui/prompt.js';
+import { clearScreen, printAppHeader } from '../ui/display.js';
+import { safeInput } from '../ui/prompt.js';
 
 export async function runReview(stats) {
   clearScreen();
@@ -26,8 +25,7 @@ export async function runReview(stats) {
   });
   console.log();
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  await ask(rl, chalk.bold.green('  Press [ENTER] to start review › '));
+  await safeInput({ message: 'Press [ENTER] to start review ›' });
 
   for (let i = 0; i < dueCards.length; i++) {
     const card = dueCards[i];
@@ -73,7 +71,8 @@ export async function runReview(stats) {
       console.log(`  ${chalk.dim('💡 Pista:')} ${chalk.gray(exercise.hint)}\n`);
     }
 
-    const input = (await ask(rl, chalk.bold.green('  Your answer › '))).trim();
+    const input = (await safeInput({ message: 'Your answer ›' })).trim();
+    if (input === '/quit' || input.toLowerCase() === 'exit') break;
 
     const isCorrect = input.toLowerCase().trim() === exercise.answer.toLowerCase().trim();
     console.log();
@@ -98,11 +97,10 @@ export async function runReview(stats) {
     }
 
     if (i < dueCards.length - 1) {
-      await ask(rl, chalk.dim('  Press [ENTER] for next card › '));
+      await safeInput({ message: 'Press [ENTER] for next card ›' });
     }
   }
 
-  rl.close();
   clearScreen();
   printAppHeader('SRS Review Completed');
   console.log(chalk.bold.green('  🎉 Great session! Your spaced repetition memory intervals have been updated.\n'));

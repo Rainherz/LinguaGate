@@ -20,12 +20,14 @@ Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetiti
 | Mode | Description |
 |------|-------------|
 | 🗺️ **Learning Path** | CEFR structured curriculum (A1 ➔ C1) with progressive lesson unlocks, micro-theory cheat sheets, and XP. |
-| 🎧 **Listening & Dictation** | Audio listening lab: plays native English voice through your speakers with speed controls (`[r]` normal, `[s]` slow) and phonetic IPA breakdowns. |
+| 🎧 **Listening & Dictation** | Audio listening lab: plays native English voice with speed controls (`[r]` 1.0x, `[s]` 0.7x, `[u]` 0.4x ultra slow) and phonetic IPA breakdowns. |
+| ⚡ **Irregular Verbs Gym** | Master the 3 verb forms (*Infinitive ➔ Past Simple ➔ Past Participle*) categorized by CEFR level and phonetic patterns. |
 | 🎭 **Roleplay Missions** | Real-world interactive scenarios (NYC Coffee Shop, Tech Standup, Airport Customs, Hotel) with live objective tracking. |
 | 💬 **Phrasal Verbs & Slang** | Master native idiomatic expressions (Tech/Workplace, Daily Slang, Business) with situational quizzes. |
 | ⚡ **Time Attack** | 60-second rapid fire grammar speed challenge with rankings. |
 | 🧠 **Review Mistakes (SRS)** | SuperMemo SM-2 spaced repetition cards targeting grammar patterns due for retention. |
 | 🎓 **Placement Test** | Adaptive diagnostic test that calibrates your CEFR level and auto-unlocks units. |
+| 📦 **Export to Anki / Notebook**| Export all your SRS cards and irregular verbs to Anki `.csv` or personal Markdown study notebooks. |
 | 💬 **Free Chat** | Open conversational practice with active grammar gate. |
 | 🌍 **Translate** | Translate Spanish phrases to English with comprehensive grammar theory breakdowns. |
 | ✏️ **Fill in the Blank** | Complete sentences with the correct word, tense, or preposition. |
@@ -44,7 +46,9 @@ Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetiti
 
 ## Features
 
-- 🎧 **Native Audio Listening Lab**: Zero-config audio playback via `mpg123`/`ffplay` with local disk caching and phonetic insights.
+- 🎧 **Native Audio Listening Lab**: Zero-config audio playback via `ffplay`/`mpg123` with chained digital audio filters for real 0.4x slow motion.
+- ⚡ **Irregular Verbs Workout**: 50+ high-frequency verbs organized into phonetic pattern families (*i-a-u*, *ought/aught*, *o-o-en*).
+- 📦 **One-Click Anki Sync**: Export all mistakes and verbs directly into Anki Mobile / Desktop (`export/anki_deck.csv`).
 - 🎭 **Interactive Objective-Driven Roleplay**: Scenarios evaluate grammar + checklist goals in real time.
 - 💬 **Idiomatic English Vault**: Phrasal verbs explained by real meaning vs literal traps.
 - 🎓 **Adaptive Placement Test**: Calibrate directly to your real level (A2, B1, B2) without repeating what you already know.
@@ -64,7 +68,7 @@ Every mistake is automatically converted into a **SuperMemo SM-2 Spaced Repetiti
 - [Node.js](https://nodejs.org) 18+
 - [pnpm](https://pnpm.io)
 - [Antigravity CLI](https://antigravity.dev) (`agy`) installed and authenticated
-- `mpg123` or `ffplay` (for native audio playback)
+- `ffmpeg` / `ffplay` or `mpg123` (for native audio playback)
 
 ---
 

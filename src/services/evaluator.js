@@ -3,23 +3,22 @@ import chalk from 'chalk';
 import { checkTranslation, checkGrammar, chatReply } from './agy.js';
 import { updateStreak, recordError } from './history.js';
 import { printError, printBotReply } from '../ui/display.js';
-import { ask } from '../ui/prompt.js';
+import { safeInput } from '../ui/prompt.js';
 
 export async function evaluateTranslationExercise({
   spanish,
   expectedEnglish,
   hint,
   grammarRule = 'translation error',
-  stats,
-  rl
+  stats
 }) {
   console.log(`  ${chalk.bold.yellow('🇪🇸')} ${chalk.bold.white(spanish)}`);
   if (hint) {
     console.log(`  ${chalk.dim('💡 Hint:')} ${chalk.gray(hint)}\n`);
   }
 
-  const input = (await ask(rl, chalk.bold.green('  Your translation › '))).trim();
-  if (!input) return { isCorrect: false, score: 0 };
+  const input = (await safeInput({ message: 'Your translation ›' })).trim();
+  if (!input || input === '/quit') return { isCorrect: false, score: 0, quit: input === '/quit' };
 
   const evalSpinner = ora({ text: 'Evaluating...', color: 'yellow', indent: 2 }).start();
   let evaluation;
@@ -73,8 +72,7 @@ export async function evaluateFillBlankExercise({
   hint,
   explanation,
   grammarRule = 'fill-in-the-blank error',
-  stats,
-  rl
+  stats
 }) {
   const sentenceWithHighlight = sentence.replace('___', chalk.bold.cyan('___'));
   console.log(`  ${chalk.bold.white(sentenceWithHighlight)}`);
@@ -82,8 +80,8 @@ export async function evaluateFillBlankExercise({
     console.log(`  ${chalk.dim('💡 Hint:')} ${chalk.gray(hint)}\n`);
   }
 
-  const input = (await ask(rl, chalk.bold.green('  Your answer › '))).trim();
-  if (!input) return { isCorrect: false };
+  const input = (await safeInput({ message: 'Your answer ›' })).trim();
+  if (!input || input === '/quit') return { isCorrect: false, quit: input === '/quit' };
 
   const isMatch = input.toLowerCase() === answer.toLowerCase().trim();
   console.log();
@@ -108,16 +106,15 @@ export async function evaluateFillBlankExercise({
 export async function evaluateChatExercise({
   promptQuestion,
   grammarRule = 'conversation error',
-  stats,
-  rl
+  stats
 }) {
   console.log(`  ${chalk.bold.blue('🤖 Tutor:')} ${chalk.white(promptQuestion)}`);
   if (grammarRule) {
     console.log(`  ${chalk.dim(`(Practice: ${grammarRule})`)}\n`);
   }
 
-  const input = (await ask(rl, chalk.bold.green('  Your reply › '))).trim();
-  if (!input) return { isCorrect: false };
+  const input = (await safeInput({ message: 'Your reply ›' })).trim();
+  if (!input || input === '/quit') return { isCorrect: false, quit: input === '/quit' };
 
   const checkSpinner = ora({ text: 'Checking grammar...', color: 'yellow', indent: 2 }).start();
   let result;

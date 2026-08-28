@@ -1,17 +1,14 @@
-import readline from 'node:readline';
 import ora from 'ora';
 import chalk from 'chalk';
 import { getSpanishPhrase } from '../services/agy.js';
 import { evaluateTranslationExercise } from '../services/evaluator.js';
-import { clearScreen, printAppHeader, printStreak, printDivider } from '../ui/display.js';
-import { ask } from '../ui/prompt.js';
+import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
+import { safeConfirm } from '../ui/prompt.js';
 
 export async function runTranslate(stats, difficulty) {
   clearScreen();
   printAppHeader(`Translate (${difficulty.toUpperCase()})`);
   console.log(chalk.gray('  Translate the Spanish phrase to natural English. Type /quit to exit.\n'));
-
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
   let running = true;
   while (running) {
@@ -31,14 +28,13 @@ export async function runTranslate(stats, difficulty) {
       expectedEnglish: phrase.english,
       hint: phrase.hint,
       grammarRule: 'Translation Practice',
-      stats,
-      rl
+      stats
     });
 
-    printDivider();
-    const again = (await ask(rl, chalk.gray('  Next phrase? (y/n) › '))).trim().toLowerCase();
-    if (again !== 'y') running = false;
-  }
+    if (res.quit) break;
 
-  rl.close();
+    printDivider();
+    const again = await safeConfirm({ message: 'Next phrase?', default: true });
+    if (!again) running = false;
+  }
 }

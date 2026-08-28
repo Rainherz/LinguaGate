@@ -1,15 +1,10 @@
-import readline from 'node:readline';
-import { safeSelect } from '../ui/prompt.js';
+import { safeSelect, safeInput } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
 import { getSlangWorkout } from '../services/agy.js';
 import { updateStreak, recordError } from '../services/history.js';
-import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
-
-function ask(rl, question) {
-  return new Promise((resolve) => rl.question(question, resolve));
-}
+import { clearScreen, printAppHeader } from '../ui/display.js';
 
 export async function runSlang(stats) {
   clearScreen();
@@ -41,8 +36,6 @@ export async function runSlang(stats) {
     return;
   }
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
   for (let i = 0; i < workout.items.length; i++) {
     const item = workout.items[i];
     clearScreen();
@@ -71,7 +64,8 @@ export async function runSlang(stats) {
       console.log(`  ${chalk.dim('💡 Pista:')} ${chalk.gray(item.challenge.hint)}\n`);
     }
 
-    const input = (await ask(rl, chalk.bold.green('  Your answer › '))).trim();
+    const input = (await safeInput({ message: 'Your answer ›' })).trim();
+    if (input === '/quit' || input.toLowerCase() === 'exit') break;
 
     const isMatch = input.toLowerCase().includes(item.challenge.answer.toLowerCase().trim());
     console.log();
@@ -87,11 +81,9 @@ export async function runSlang(stats) {
     }
 
     if (i < workout.items.length - 1) {
-      await ask(rl, chalk.dim('\n  Press [ENTER] for the next expression › '));
+      await safeInput({ message: 'Press [ENTER] for the next expression ›' });
     }
   }
-
-  rl.close();
 
   clearScreen();
   printAppHeader('Workout Completed');

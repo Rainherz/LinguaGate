@@ -1,8 +1,7 @@
-import readline from 'node:readline';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { safeSelect, ask } from '../ui/prompt.js';
+import { safeSelect, safeInput } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import { checkTranslation } from '../services/agy.js';
@@ -101,8 +100,6 @@ export async function runPlacementTest() {
   let scores = { A1: 0, A2: 0, B1: 0, B2: 0, C1: 0 };
   const totalPerLevel = { A1: 1, A2: 1, B1: 2, B2: 1, C1: 1 };
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
   for (let i = 0; i < QUESTIONS.length; i++) {
     const q = QUESTIONS[i];
     console.log(chalk.bold.magenta(`\n[Question ${i + 1}/${QUESTIONS.length} — Level ${q.level}]`));
@@ -121,7 +118,7 @@ export async function runPlacementTest() {
       }
     } else if (q.type === 'translate') {
       console.log(chalk.bold.yellow(`  🇪🇸 ${q.spanish}`));
-      const input = (await ask(rl, chalk.bold.green('  Your translation › '))).trim();
+      const input = (await safeInput({ message: 'Your translation ›' })).trim();
 
       const spinner = ora({ text: 'Evaluating translation...', color: 'yellow', indent: 2 }).start();
       try {
@@ -142,8 +139,6 @@ export async function runPlacementTest() {
     }
     printDivider();
   }
-
-  rl.close();
 
   // Determine Level
   let assignedLevel = 'A1';
