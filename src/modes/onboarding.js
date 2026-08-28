@@ -66,10 +66,11 @@ export async function runOnboardingWizard() {
   if (calibrationChoice === 'TEST') {
     await runPlacementTest();
   } else {
+    clearScreen();
     console.log(
       boxen(
-        `${chalk.bold.green('🌱 Starting Level Set: A1.1')}\n\n` +
-        `${chalk.white('You will begin from foundational basics (Pronouns, Articles & Everyday Objects).')}`,
+        `${chalk.bold.green('🌱 Starting Level Set: A1.1 (The Basics)')}\n\n` +
+        `${chalk.white('You will begin from foundational building blocks (Pronouns, Articles & Daily Routines).')}`,
         {
           padding: 1,
           margin: 1,
@@ -78,6 +79,7 @@ export async function runOnboardingWizard() {
         }
       )
     );
+    await safeConfirm({ message: 'Press Enter to continue', default: true });
   }
 
   // Save onboarding state
@@ -86,20 +88,4 @@ export async function runOnboardingWizard() {
     dailyGoalXp,
     onboarded: true
   });
-
-  clearScreen();
-  const readyBox =
-    `${chalk.bold.green(`🎉 You are all set, ${userName}!`)}\n\n` +
-    `${chalk.white('Your profile and daily goals have been saved.\nLet’s start practicing!')}`;
-
-  console.log(
-    boxen(readyBox, {
-      padding: 1,
-      margin: 1,
-      borderStyle: 'round',
-      borderColor: 'green'
-    })
-  );
-
-  await safeConfirm({ message: 'Enter Main Menu?', default: true });
 }
