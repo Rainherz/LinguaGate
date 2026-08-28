@@ -7,6 +7,7 @@ import {
   evaluateSpeechMetrics
 } from '../src/services/speech.js';
 import { isRecorderAvailable, detectRecorderDriver } from '../src/services/recorder.js';
+import { PRACTICE_SENTENCES } from '../src/modes/speaking.js';
 
 describe('Speech & Pronunciation Evaluation Engine', () => {
   test('isRecorderAvailable returns a boolean indicating recording support', () => {
@@ -15,6 +16,17 @@ describe('Speech & Pronunciation Evaluation Engine', () => {
     const driver = detectRecorderDriver();
     if (available) {
       assert.ok(driver);
+    }
+  });
+
+  test('PRACTICE_SENTENCES contains target sentences with traps and self-checks', () => {
+    assert.ok(PRACTICE_SENTENCES.length >= 4);
+    for (const item of PRACTICE_SENTENCES) {
+      assert.ok(item.sentence);
+      assert.ok(item.phonetics);
+      assert.ok(item.stressTip);
+      assert.ok(Array.isArray(item.traps) && item.traps.length > 0);
+      assert.ok(Array.isArray(item.checks) && item.checks.length > 0);
     }
   });
 

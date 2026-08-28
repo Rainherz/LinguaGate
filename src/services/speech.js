@@ -96,7 +96,7 @@ export function calculateWordAccuracy(expected, actual) {
 }
 
 /**
- * Evaluates comprehensive speech metrics.
+ * Evaluates comprehensive speech metrics based on objective physical measurements.
  * @param {string} expectedText
  * @param {string} spokenText
  * @param {number} durationSec
@@ -127,25 +127,35 @@ export function evaluateSpeechMetrics(expectedText, spokenText, durationSec) {
 }
 
 /**
- * Calls AI to evaluate a spoken response for grammar and conversational fluency.
+ * Calls AI using a strict, zero-bias IELTS/TOEFL examiner rubric.
+ * Explicitly penalizes Spanish phonetic interference (epenthesis, silent letters, flat intonation).
  * @param {string} promptContext
  * @param {string} spokenText
  * @param {string} [expectedTarget]
- * @returns {Promise<{ isCorrect: boolean, feedback: string, grammarScore: number, pronunciationTips: string[], suggestions: string[] }>}
+ * @returns {Promise<{ isCorrect: boolean, feedback: string, ieltsBand: string, wordStressScore: number, connectedSpeechScore: number, criticalFlaws: string[], phoneticTips: string[], suggestions: string[] }>}
  */
 export async function evaluateSpokenWithAI(promptContext, spokenText, expectedTarget = '') {
   const prompt =
-    `You are a Senior English Speech & Pronunciation Coach. Evaluate this student spoken response.\n` +
-    `Context/Prompt: "${promptContext}"\n` +
-    `Expected Target (if any): "${expectedTarget}"\n` +
-    `Student Spoke: "${spokenText}"\n\n` +
-    `Return ONLY a raw JSON object with NO markdown formatting, NO backticks, NO extra text:\n` +
+    `You are a STRICT, ZERO-BIAS IELTS & TOEFL Senior Speech Examiner.\n` +
+    `DO NOT give empty praise, cheerleading, or false compliments. Be clinically objective, honest, and technically accurate.\n\n` +
+    `Target Sentence (Expected): "${expectedTarget}"\n` +
+    `Student Output: "${spokenText}"\n` +
+    `Context: "${promptContext}"\n\n` +
+    `Evaluate specifically for common native Spanish speaker phonetic traps:\n` +
+    `1. S-cluster epenthesis (e.g. pronouncing 'es-schedule' instead of /sk/)\n` +
+    `2. Silent letters & false vowels (e.g. pronouncing the 'l' in 'should' or 'would', wrong -ed endings)\n` +
+    `3. Word stress placement (e.g. saying 'ar-chi-TEC-ture' instead of 'AR-chi-tecture')\n` +
+    `4. Vowel reduction in function words (to, for, the, and)\n\n` +
+    `Return ONLY a raw JSON object with NO markdown formatting, NO backticks:\n` +
     `{\n` +
-    `  "isCorrect": boolean (true if communicative and grammatically sound),\n` +
-    `  "feedback": "1-2 concise sentences in Spanish explaining how their spoken response sounded and key advice",\n` +
-    `  "grammarScore": number (0-100),\n` +
-    `  "pronunciationTips": ["Specific tip on phonetics/stress for words used (e.g. 'Emphasize the second syllable in ca-REER')"],\n` +
-    `  "suggestions": ["More natural native phrasing"]\n` +
+    `  "isCorrect": boolean (true ONLY if pronunciation and grammar are clear and accurate),\n` +
+    `  "ieltsBand": "Band 6.0 (Competent)" | "Band 7.0 (Good)" | "Band 8.0 (Very Good)" | "Band 5.0 (Modest)",\n` +
+    `  "wordStressScore": number (0-100),\n` +
+    `  "connectedSpeechScore": number (0-100),\n` +
+    `  "feedback": "Strict 1-2 sentence diagnostic in Spanish focusing on what MUST be corrected.",\n` +
+    `  "criticalFlaws": ["Specific phonetic or stress mistakes to eliminate (in Spanish)"],\n` +
+    `  "phoneticTips": ["Concrete IPA tip on where the tongue/mouth should be placed"],\n` +
+    `  "suggestions": ["Natural native phrasing"]\n` +
     `}`;
 
   try {
@@ -153,9 +163,12 @@ export async function evaluateSpokenWithAI(promptContext, spokenText, expectedTa
   } catch {
     return {
       isCorrect: true,
-      feedback: 'Respuesta comprensible y fluida.',
-      grammarScore: 85,
-      pronunciationTips: ['Cuidá la acentuación de las palabras clave.'],
+      ieltsBand: 'Band 6.5 (Competent)',
+      wordStressScore: 80,
+      connectedSpeechScore: 75,
+      feedback: 'Pronunciación entendible pero requiere mayor precisión en la acentuación de sílabas tónicas.',
+      criticalFlaws: ['Cuidar la no pronunciación de consonantes mudas.'],
+      phoneticTips: ['Poné el aire en la primera sílaba y no agregues vocales al inicio de palabras con S.'],
       suggestions: [spokenText]
     };
   }
