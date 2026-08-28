@@ -2,8 +2,44 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { checkTranslation, checkGrammar, chatReply } from './agy.js';
 import { updateStreak, recordError } from './history.js';
+import { playAudio, isAudioSupported } from './audio.js';
 import { printError, printBotReply } from '../ui/display.js';
 import { safeInput } from '../ui/prompt.js';
+
+/**
+ * Prompts user with options to listen to the phrase audio (1.0x / 0.7x) or continue immediately.
+ * @param {string} phrase
+ */
+export async function promptAudioFollowup(phrase) {
+  if (!phrase || !isAudioSupported()) return;
+
+  const cleanPhrase = phrase.replace(/<\/?[^>]+(>|$)/g, '').trim();
+  if (!cleanPhrase) return;
+
+  while (true) {
+    const action = (
+      await safeInput({
+        message: `${chalk.dim('[ENTER] Next')} • ${chalk.cyan('[a] 🔊 Audio')} • ${chalk.yellow('[s] 🐢 Slow')} ›`
+      })
+    ).trim().toLowerCase();
+
+    if (!action || action === 'next' || action === 'c' || action === '/quit') {
+      break;
+    }
+
+    if (action === 'a' || action === 'audio') {
+      const spinner = ora({ text: '🔊 Playing native pronunciation...', color: 'cyan', indent: 2 }).start();
+      await playAudio(cleanPhrase, { speed: 'normal' });
+      spinner.succeed(chalk.green('Audio played 🔊'));
+      console.log();
+    } else if (action === 's' || action === 'slow') {
+      const spinner = ora({ text: '🐢 Playing slow pronunciation (0.7x)...', color: 'yellow', indent: 2 }).start();
+      await playAudio(cleanPhrase, { speed: 'slow' });
+      spinner.succeed(chalk.green('Slow audio played 🐢'));
+      console.log();
+    }
+  }
+}
 
 export async function evaluateTranslationExercise({
   spanish,
@@ -43,6 +79,7 @@ export async function evaluateTranslationExercise({
     console.log(`  ${chalk.dim('🎯 Ideal:')} ${chalk.cyan(expectedEnglish)}\n`);
     updateStreak(true);
     stats.recordCorrect();
+    await promptAudioFollowup(expectedEnglish);
     return { isCorrect: true, score: evaluation.score };
   } else {
     console.log(chalk.red(`  ✖ Needs improvement (${evaluation.score}/100)`));
@@ -62,6 +99,7 @@ export async function evaluateTranslationExercise({
     }
     updateStreak(false);
     stats.recordIncorrect(grammarRule);
+    await promptAudioFollowup(expectedEnglish);
     return { isCorrect: false, score: evaluation.score };
   }
 }
@@ -85,10 +123,13 @@ export async function evaluateFillBlankExercise({
 
   const isMatch = input.toLowerCase() === answer.toLowerCase().trim();
   console.log();
+  const fullSentence = sentence.replace('___', answer);
+
   if (isMatch) {
     console.log(chalk.green(`  ✔ Correct! "${answer}" is right.\n`));
     updateStreak(true);
     stats.recordCorrect();
+    await promptAudioFollowup(fullSentence);
     return { isCorrect: true };
   } else {
     console.log(chalk.red(`  ✖ Incorrect. The answer is: "${chalk.white(answer)}"`));
@@ -99,6 +140,7 @@ export async function evaluateFillBlankExercise({
     updateStreak(false);
     stats.recordIncorrect(grammarRule);
     recordError(grammarRule, sentence, answer);
+    await promptAudioFollowup(fullSentence);
     return { isCorrect: false };
   }
 }
@@ -133,12 +175,16 @@ export async function evaluateChatExercise({
     printBotReply(reply);
     updateStreak(true);
     stats.recordCorrect();
+    await promptAudioFollowup(reply);
     return { isCorrect: true };
   } else {
     printError(result);
     updateStreak(false);
     stats.recordIncorrect(grammarRule);
     result.corrections?.forEach((c) => recordError(c, input, result.correctedText));
+    if (result.correctedText) {
+      await promptAudioFollowup(result.correctedText);
+    }
     return { isCorrect: false };
   }
 }

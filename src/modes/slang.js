@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import { getSlangWorkout } from '../services/agy.js';
 import { updateStreak, recordError } from '../services/history.js';
+import { promptAudioFollowup } from '../services/evaluator.js';
 import { clearScreen, printAppHeader } from '../ui/display.js';
 
 export async function runSlang(stats) {
@@ -80,9 +81,8 @@ export async function runSlang(stats) {
       recordError(`Phrasal Verb: ${item.phrase}`, item.challenge.prompt, item.challenge.answer);
     }
 
-    if (i < workout.items.length - 1) {
-      await safeInput({ message: 'Press [ENTER] for the next expression ›' });
-    }
+    console.log();
+    await promptAudioFollowup(item.example);
   }
 
   clearScreen();

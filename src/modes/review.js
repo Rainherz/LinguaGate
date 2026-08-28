@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import { getMistakeExercise } from '../services/agy.js';
 import { getDueSrsCards, reviewSrsCard } from '../services/history.js';
+import { promptAudioFollowup } from '../services/evaluator.js';
 import { clearScreen, printAppHeader } from '../ui/display.js';
 import { safeInput } from '../ui/prompt.js';
 
@@ -96,9 +97,7 @@ export async function runReview(stats) {
       stats.recordIncorrect(card.rule);
     }
 
-    if (i < dueCards.length - 1) {
-      await safeInput({ message: 'Press [ENTER] for next card ›' });
-    }
+    await promptAudioFollowup(exercise.answer);
   }
 
   clearScreen();

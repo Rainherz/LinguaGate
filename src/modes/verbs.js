@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import { getVerbsByLevel, evaluateVerbAnswer } from '../services/verbs.js';
 import { updateStreak, recordError } from '../services/history.js';
+import { promptAudioFollowup } from '../services/evaluator.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeSelect, safeConfirm, safeInput } from '../ui/prompt.js';
 
@@ -92,6 +93,10 @@ export async function runVerbsGym(stats) {
       stats.recordIncorrect(`Irregular Verb: ${verb.infinitive}`);
       recordError(`Irregular Verb: ${verb.infinitive}`, `${pastInput} / ${partInput}`, `${verb.past} / ${verb.participle}`);
     }
+
+    console.log();
+    const spokenVerbs = `${verb.infinitive}, ${verb.past.replace(/\//g, ', or ')}, ${verb.participle.replace(/\//g, ', or ')}`;
+    await promptAudioFollowup(spokenVerbs);
 
     printDivider();
     if (round < pool.length) {
