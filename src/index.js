@@ -5,10 +5,11 @@ import { safeSelect, safeConfirm } from './ui/prompt.js';
 import { getWordOfDay } from './services/agy.js';
 import { loadHistory, recordSession } from './services/history.js';
 import { loadProgress } from './services/progress.js';
-import { loadConfig } from './services/config.js';
+import { loadConfig, getGreeting } from './services/config.js';
 import { formatDailyGoalBar } from './services/activity.js';
 import { SessionStats } from './services/stats.js';
 import { banner, printWordOfDay } from './ui/display.js';
+import { runOnboardingWizard } from './modes/onboarding.js';
 import { runPath } from './modes/path.js';
 import { runRoleplay } from './modes/roleplay.js';
 import { runSlang } from './modes/slang.js';
@@ -54,6 +55,12 @@ async function getDifficulty() {
 }
 
 async function main() {
+  let config = loadConfig();
+  if (!config.onboarded) {
+    await runOnboardingWizard();
+    config = loadConfig();
+  }
+
   banner();
 
   // Word of the day
@@ -69,11 +76,11 @@ async function main() {
   // Stats & Progress Overview
   const history = loadHistory();
   const progress = loadProgress();
-  const config = loadConfig();
   const srsDueCount = Object.values(history.srsCards || {}).filter(
     (c) => c.nextReviewDate <= new Date().toISOString()
   ).length;
 
+  console.log(`  ${chalk.bold.cyan(getGreeting(config.userName))}`);
   console.log(
     chalk.yellow(
       `  🏆 Streak: ${history.bestStreak} | ⚡ XP: ${progress.xp} | 🎓 Lessons: ${progress.completedLessons.length} | 🧠 Due Cards: ${srsDueCount}`

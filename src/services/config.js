@@ -13,6 +13,7 @@ function getConfigFilePath() {
  * @property {'beginner' | 'intermediate' | 'advanced'} defaultDifficulty
  * @property {boolean} soundEffects
  * @property {number} dailyGoalXp
+ * @property {boolean} onboarded
  */
 
 /** @type {UserConfig} */
@@ -22,7 +23,8 @@ export const DEFAULT_CONFIG = {
   audioPlayer: 'auto',
   defaultDifficulty: 'beginner',
   soundEffects: true,
-  dailyGoalXp: 50
+  dailyGoalXp: 50,
+  onboarded: false
 };
 
 /**
@@ -61,4 +63,23 @@ export function updateConfig(updates) {
 export function resetConfig() {
   saveConfig(DEFAULT_CONFIG);
   return structuredClone(DEFAULT_CONFIG);
+}
+
+/**
+ * Returns a warm time-of-day greeting personalized with user's name.
+ * @param {string} [name='Learner']
+ * @param {Date} [d=new Date()]
+ * @returns {string}
+ */
+export function getGreeting(name = 'Learner', d = new Date()) {
+  const hour = d.getHours();
+  const cleanName = name && name.trim() ? name.trim() : 'Learner';
+
+  if (hour >= 5 && hour < 12) {
+    return `Good morning, ${cleanName}! ☕`;
+  } else if (hour >= 12 && hour < 19) {
+    return `Good afternoon, ${cleanName}! ☀️`;
+  } else {
+    return `Good evening, ${cleanName}! 🌙`;
+  }
 }
