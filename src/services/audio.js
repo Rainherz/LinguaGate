@@ -79,13 +79,13 @@ export async function playAudio(text, { speed = 'normal' } = {}) {
       if (speed === 'slow') {
         speedArgs += ' -af "atempo=0.7"';
       } else if (speed === 'ultra') {
-        speedArgs += ' -af "atempo=0.4"';
+        speedArgs += ' -af "atempo=0.5,atempo=0.8"';
       }
     } else if (player.type === 'mpg123') {
       if (speed === 'slow') {
         speedArgs += ' --pitch -0.3';
       } else if (speed === 'ultra') {
-        speedArgs += ' --pitch -0.6';
+        speedArgs += ' --pitch -0.5';
       }
     }
 
