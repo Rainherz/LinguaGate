@@ -2,7 +2,8 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import ora from 'ora';
 import { isRecorderAvailable, startRecording } from '../services/recorder.js';
-import { evaluateSpeechMetrics, evaluateSpokenWithAI } from '../services/speech.js';
+import { evaluateSpeechMetrics, evaluateSpokenWithAI, diffSpokenWords, diagnoseArticulation } from '../services/speech.js';
+import { isTranscriptionAvailable, transcribeAudio } from '../services/transcriber.js';
 import { updateStreak, recordError } from '../services/history.js';
 import { playAudio, playAudioSlow, playAudioUltraSlow, playAudioFile } from '../services/audio.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
@@ -82,17 +83,22 @@ export async function runSpeakingLab(stats) {
     printAppHeader('Speaking & Pronunciation Lab');
 
     const hasMic = isRecorderAvailable();
+    const hasStt = isTranscriptionAvailable();
     const micStatus = hasMic
-      ? chalk.green('✔ Microphone Active (Acoustic Capture Ready)')
+      ? chalk.green('✔ Microphone Active')
       : chalk.yellow('⚠ No Microphone Detected (Text Simulation Mode)');
+    const sttStatus = hasStt
+      ? chalk.green('✔ Local transcription ready — scores are measured')
+      : chalk.yellow('⚠ No speech-to-text engine — scores will be self-reported');
 
     console.log(
       boxen(
-        `${chalk.bold.white('Strict IELTS/TOEFL Speech & Acoustic Evaluation:')}\n\n` +
-        `  ${chalk.dim('• Hardware Status:')}  ${micStatus}\n` +
-        `  ${chalk.dim('• Acoustic Checks:')}  Word Stress, Silent Letters, Minimal Pairs, S-Cluster Epenthesis\n` +
-        `  ${chalk.dim('• Self-Monitoring:')}  [p] Play YOUR recording ➔ Compare with [r] Native Model\n` +
-        `  ${chalk.dim('• Scoring Rubric:')}   IELTS Band, WPM Speed Meter, Connected Speech Score`,
+        `${chalk.bold.white('Speech Evaluation:')}\n\n` +
+        `  ${chalk.dim('• Microphone:')}      ${micStatus}\n` +
+        `  ${chalk.dim('• Transcription:')}   ${sttStatus}\n` +
+        `  ${chalk.dim('• Measured:')}        WPM cadence, word precision vs target, filler count\n` +
+        `  ${chalk.dim('• Inferred by AI:')}  Word stress, connected speech, IELTS band ${chalk.dim('(from the transcript, not the waveform)')}\n` +
+        `  ${chalk.dim('• Self-Monitoring:')} [p] Play YOUR recording ➔ Compare with [r] Native Model`,
         {
           padding: 1,
           margin: 1,
@@ -172,6 +178,10 @@ async function runPronounceWorkout(stats, hasMic) {
     let spokenText;
     let durationSec = 3.0;
     let recordedPath = null;
+    let transcriptSource = 'self-reported';
+    /** @type {Array<{ word: string, probability: number }>} */
+    let acousticWords = [];
+    let clarityScore = 0;
 
     if (hasMic) {
       console.log(chalk.bold.yellow('\n  🎙️ Press Enter to START recording your voice:'));
@@ -226,10 +236,44 @@ async function runPronounceWorkout(stats, hasMic) {
         }
       }
 
-      spokenText = (await safeInput({
-        message: 'Confirm what you spoke (or adjust transcript if you missed words) ›',
-        default: item.sentence
-      })).trim();
+      let stt = null;
+      if (isTranscriptionAvailable()) {
+        const sttSpinner = ora({
+          text: '🧠 Transcribing what you actually said...',
+          color: 'magenta',
+          indent: 2
+        }).start();
+        stt = await transcribeAudio(recordedPath);
+        if (stt.success) {
+          sttSpinner.succeed(chalk.green(`Transcribed locally via ${stt.engine} 🧠`));
+        } else {
+          sttSpinner.warn(chalk.yellow(`Transcription unavailable: ${stt.error}`));
+        }
+      }
+
+      if (stt && stt.success) {
+        transcriptSource = stt.engine;
+        acousticWords = stt.words || [];
+        clarityScore = stt.clarityScore || 0;
+        // Prefer measured speech span over wall-clock so lead-in silence
+        // does not deflate the WPM reading.
+        if (stt.speechDurationSec > 0) durationSec = stt.speechDurationSec;
+
+        console.log(
+          `\n  ${chalk.dim('👂 What the engine actually heard:')}\n` +
+          `  ${chalk.bold.white(`"${stt.text}"`)}\n`
+        );
+        spokenText = stt.text;
+      } else {
+        console.log(
+          chalk.yellow(
+            '\n  ⚠ No transcript captured — the scores below are self-reported, not measured.\n'
+          )
+        );
+        spokenText = (await safeInput({
+          message: 'Type what you actually said (do NOT paste the target sentence) ›'
+        })).trim();
+      }
     } else {
       spokenText = (await safeInput({
         message: 'Type the sentence as you spoke it (Simulation) ›'
@@ -240,8 +284,9 @@ async function runPronounceWorkout(stats, hasMic) {
 
     // Strict AI Diagnostic Evaluation
     const metrics = evaluateSpeechMetrics(item.sentence, spokenText, durationSec);
-    const evalSpinner = ora({ text: 'Conducting strict IELTS/TOEFL acoustic & phonetic audit...', color: 'magenta' }).start();
-    const aiFeedback = await evaluateSpokenWithAI('Read aloud strict practice', spokenText, item.sentence);
+    const diagnosis = diagnoseArticulation(item.sentence, spokenText, acousticWords);
+    const evalSpinner = ora({ text: 'Reviewing your transcript with the AI examiner...', color: 'magenta' }).start();
+    const aiFeedback = await evaluateSpokenWithAI('Read aloud strict practice', spokenText, item.sentence, diagnosis);
     evalSpinner.stop();
 
     clearScreen();
@@ -251,14 +296,72 @@ async function runPronounceWorkout(stats, hasMic) {
       ? aiFeedback.criticalFlaws.map((f) => `  ${chalk.red('✖')} ${chalk.yellow(f)}`).join('\n')
       : `  ${chalk.green('✔ No critical phonetic transfer errors detected.')}`;
 
+    // Render target vs transcript with per-word alignment. This must live inside
+    // the scorecard: the pre-evaluation echo is wiped by clearScreen() above.
+    const { expectedTokens, actualTokens } = diffSpokenWords(item.sentence, spokenText);
+    const renderTokens = (tokens, okColor) =>
+      tokens
+        .map((t) => (t.matched ? okColor(t.word) : chalk.bold.red.underline(t.word)))
+        .join(' ');
+
+    const comparison =
+      `${chalk.bold.white('🎯 Target:')}   ${renderTokens(expectedTokens, chalk.gray)}\n` +
+      `${chalk.bold.white('👂 You said:')} ${renderTokens(actualTokens, chalk.green)}\n` +
+      (transcriptSource === 'self-reported'
+        ? `${chalk.dim('   (typed by you — not measured from audio)')}\n`
+        : `${chalk.dim(`   (transcribed from your audio by ${transcriptSource})`)}\n`);
+
+    // Confidence alone would call a butchered sentence perfect: the recognizer
+    // is sure of what IT heard, not of whether you said the target word.
+    const VERDICT_LABEL = {
+      'clean': chalk.green('clean ✔'),
+      'unclear-delivery': chalk.yellow('unclear delivery ⚠'),
+      'confident-substitution': chalk.red('confident substitution ✖'),
+      'mumbled-substitution': chalk.red('slurred substitution ✖'),
+      'substitution': chalk.red('substitution ✖'),
+      'mixed': chalk.red('mixed errors ✖')
+    };
+
+    const SPAN_ARROW = chalk.dim('➔');
+    const spanLines = diagnosis.spans.map((sp) => {
+      const conf = sp.confidence === null ? '' : chalk.dim(` (${sp.confidence.toFixed(2)})`);
+      if (sp.type === 'omission') {
+        return `      ${chalk.gray(sp.target)} ${SPAN_ARROW} ${chalk.red('(dropped)')}`;
+      }
+      if (sp.type === 'insertion') {
+        return `      ${chalk.gray('(nothing)')} ${SPAN_ARROW} ${chalk.red(sp.spoken)}${conf}`;
+      }
+      return `      ${chalk.gray(sp.target)} ${SPAN_ARROW} ${chalk.bold.red(sp.spoken)}${conf}`;
+    });
+
+    const unclearWords = diagnosis.words.filter((w) => w.verdict === 'unclear');
+    const unclearLine = unclearWords.length > 0
+      ? `  ${chalk.dim('• Said right, unclear:')}     ${unclearWords.map((w) => `${chalk.yellow(w.word)}${chalk.dim(` (${w.probability.toFixed(2)})`)}`).join(', ')}\n`
+      : '';
+
+    const measuredBlock = clarityScore > 0
+      ? `  ${chalk.dim('• Articulation Confidence:')} ${chalk.white(`${clarityScore}/100`)} ${chalk.dim('(how sure the recognizer was of what it heard)')}\n` +
+        `  ${chalk.dim('• Diagnosis:')}               ${VERDICT_LABEL[diagnosis.verdict] || diagnosis.verdict}\n` +
+        (spanLines.length > 0
+          ? `  ${chalk.dim('• What changed:')}\n${spanLines.join('\n')}\n`
+          : '') +
+        unclearLine +
+        `  ${chalk.dim(diagnosis.summary)}\n`
+      : '';
+
     const scoreCard =
-      `${chalk.bold.yellow('📋 STRICT IELTS/TOEFL DIAGNOSTIC SCORECARD')}\n\n` +
-      `  ${chalk.dim('• Estimated Level:')}        ${chalk.bold.cyan(aiFeedback.ieltsBand || 'Band 6.5')}\n` +
-      `  ${chalk.dim('• Speaking Cadence:')}       ${chalk.bold.white(metrics.wpm.label)}\n` +
-      `  ${chalk.dim('• Word Stress Score:')}      ${aiFeedback.wordStressScore >= 80 ? chalk.green(`${aiFeedback.wordStressScore}/100 ✔`) : chalk.yellow(`${aiFeedback.wordStressScore}/100 ⚠`)}\n` +
-      `  ${chalk.dim('• Connected Speech Score:')}  ${aiFeedback.connectedSpeechScore >= 80 ? chalk.green(`${aiFeedback.connectedSpeechScore}/100 ✔`) : chalk.yellow(`${aiFeedback.connectedSpeechScore}/100 ⚠`)}\n` +
-      `  ${chalk.dim('• Word Precision:')}         ${metrics.accuracy.accuracyScore >= 90 ? chalk.green(`${metrics.accuracy.accuracyScore}% ✔`) : chalk.yellow(`${metrics.accuracy.accuracyScore}%`)}\n\n` +
-      `${chalk.bold.white('🔍 Examiner Phonetic Audit:')}\n` +
+      `${chalk.bold.yellow('📋 SPEAKING SCORECARD')}\n\n` +
+      `${comparison}\n` +
+      `${chalk.bold.green('── MEASURED FROM YOUR AUDIO ──')}\n` +
+      `  ${chalk.dim('• Transcript Source:')}     ${transcriptSource === 'self-reported' ? chalk.yellow('self-reported ⚠ (install whisper for measured scores)') : chalk.green(`${transcriptSource} ✔`)}\n` +
+      `  ${chalk.dim('• Speaking Cadence:')}      ${chalk.bold.white(metrics.wpm.label)}\n` +
+      `  ${chalk.dim('• Word Precision:')}        ${metrics.accuracy.accuracyScore >= 90 ? chalk.green(`${metrics.accuracy.accuracyScore}% ✔`) : chalk.yellow(`${metrics.accuracy.accuracyScore}%`)}\n` +
+      measuredBlock +
+      `\n${chalk.bold.cyan('── INFERRED BY THE AI EXAMINER ──')}\n` +
+      `  ${chalk.dim('• Estimated Level:')}       ${chalk.bold.cyan(aiFeedback.ieltsBand || 'Band 6.5')}\n` +
+      `  ${chalk.dim('• Word Stress Score:')}     ${aiFeedback.wordStressScore >= 80 ? chalk.green(`${aiFeedback.wordStressScore}/100 ✔`) : chalk.yellow(`${aiFeedback.wordStressScore}/100 ⚠`)}\n` +
+      `  ${chalk.dim('• Connected Speech:')}      ${aiFeedback.connectedSpeechScore >= 80 ? chalk.green(`${aiFeedback.connectedSpeechScore}/100 ✔`) : chalk.yellow(`${aiFeedback.connectedSpeechScore}/100 ⚠`)}\n\n` +
+      `${chalk.bold.white('🔍 Examiner notes:')}\n` +
       `  ${aiFeedback.feedback}\n\n` +
       `${chalk.bold.red('❌ Critical Flaws to Eliminate:')}\n` +
       `${flawsFormatted}\n\n` +

@@ -30,6 +30,8 @@ describe('Config Service (User Preferences & Settings)', () => {
       userName: 'Polyglot',
       audioSpeed: 'slow',
       audioPlayer: 'ffplay',
+      sttEngine: 'whisper-cpp',
+      sttModel: '',
       aiProvider: 'auto',
       aiModel: '',
       defaultDifficulty: 'advanced',

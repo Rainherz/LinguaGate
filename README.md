@@ -2,13 +2,13 @@
 
 # 🚪🗣️ LinguaGate
 
-**The AI-Powered CLI English Learning Platform with Active Grammar Gating, IELTS Speaking Lab & Personalized Tech Mock Interviews**
+**The AI-Powered CLI English Learning Platform with Active Grammar Gating, Locally-Transcribed Speaking Lab & Personalized Tech Mock Interviews**
 
 [![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
 [![pnpm Version](https://img.shields.io/badge/pnpm-%3E%3D11.0.0-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io)
 [![CEFR Level](https://img.shields.io/badge/CEFR-A1%20%E2%9E%94%20C1-blue?style=flat-square)](https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)
 [![Algorithm](https://img.shields.io/badge/SRS-SuperMemo%20SM--2-orange?style=flat-square)](https://en.wikipedia.org/wiki/SuperMemo)
-[![Tests](https://img.shields.io/badge/Tests-63%2F63%20Passing-brightgreen?style=flat-square)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-152%2F152%20Passing-brightgreen?style=flat-square)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 *Master real-world English directly from your terminal. Built for developers preparing for international remote jobs in USD.*
@@ -42,7 +42,7 @@ flowchart LR
 ```
 
 1. **Active Grammar Gate**: You cannot progress by guessing. Every response is verified for tense harmony, subject-verb agreement, and prepositions.
-2. **Strict IELTS/TOEFL Speech & Acoustic Audit**: Real microphone capture with WPM speaking speed meter, hesitation/filler detection, phonetic stress tips, and acoustic self-monitoring (`[p]` play my voice).
+2. **Speaking Lab with Local Speech-to-Text**: Real microphone capture transcribed on your own machine by whisper.cpp — measured WPM, word-level precision against the target, filler detection, and an articulation diagnosis that crosses per-word acoustic confidence with the target diff to separate confident substitutions from mumbling. The AI examiner is fed that evidence and constrained to it.
 3. **Personalized Tech Mock Interview Simulator**: Tailor-made 4-round technical interviews for your exact role, tech stack, and seniority with official Hiring Committee verdicts.
 4. **SuperMemo SM-2 Spaced Repetition**: Mistakes are automatically converted into targeted flashcards with dynamic retention intervals (`1d ➔ 3d ➔ 7d ➔ 30d`).
 5. **30-Day Activity Heatmap & Daily Goals**: Track daily XP progress with GitHub-style ANSI terminal heatmaps.
@@ -56,7 +56,7 @@ flowchart LR
 | :--- | :---: | :--- |
 | **🗺️ Learning Path** | `CEFR A1 ➔ C1` | 5 complete units (27 lessons) covering phonetics, tenses, conditionals, inversion, and cleft sentences with micro-theory cheat sheets. |
 | **💼 Tech Mock Interview** | `Remote Hiring` | 100% personalized 4-round tech interview tailored to your role, stack, seniority, and company type with official Hiring Committee decisions. |
-| **🎙️ Speaking Lab** | `Voice & Fluency` | Hardware microphone recording, WPM cadence meter, filler word detection, Spanish phonetic transfer traps, and self-playback comparison (`[p]`). |
+| **🎙️ Speaking Lab** | `Voice & Fluency` | Hardware mic recording transcribed locally by whisper.cpp, measured WPM cadence, target-vs-spoken word diff, filler detection, and self-playback comparison (`[p]`). |
 | **🎧 Listening Lab** | `Audio Dictation` | Blind audio listening challenge with multi-speed playback (`[r]` 1.0x, `[s]` 0.7x, `[u]` 0.4x ultra-slow) and IPA connected speech insights. |
 | **⚡ Irregular Verbs Gym** | `3 Forms Drill` | Master the 3 verb forms (*Infinitive ➔ Past Simple ➔ Past Participle*) organized into phonetic pattern families (*i-a-u*, *ought/aught*, *o-o-en*). |
 | **🧩 Prepositions & Collocations** | `Common Traps` | Eliminate the #1 source of learner mistakes (*depend on*, *good at*, *make a decision*, *interested in*, *pay attention*). |
@@ -103,29 +103,97 @@ Prepare for high-paying international remote engineering interviews:
 
 ---
 
-## 🎙️ Strict IELTS/TOEFL Speaking Lab & Acoustic Auditing
+## 🎙️ Speaking Lab — Measured Fluency, Inferred Phonetics
 
-Eliminate false praise and get clinical, actionable phonetic feedback:
+The scorecard separates what the machine **measured** from what the model **inferred**. Both are useful. Only one is evidence.
 
 ```text
  ╭───────────────────────────────────────────────────────────╮
- │  📋 STRICT IELTS/TOEFL DIAGNOSTIC SCORECARD               │
+ │  📋 SPEAKING SCORECARD                                    │
  │                                                           │
- │  • Estimated Level:        Band 7.0 (Good)                │
- │  • Speaking Cadence:       118 WPM (Fluent & Natural 🔥)  │
- │  • Word Stress Score:      75/100 ⚠                       │
- │  • Connected Speech Score: 70/100 ⚠                       │
- │  • Word Precision:         100% ✔                         │
+ │  🎯 Target:   I would have avoided the automated bug.     │
+ │  👂 You said: I will have a boy avoided the automatic     │
+ │               book.                                       │
+ │            (transcribed from your audio by whisper-cpp)   │
  │                                                           │
- │  ❌ Critical Flaws to Eliminate:                          │
- │  ✖ Silent 'l' pronounced in 'would' (/wʊld/ vs /wʊd/)     │
- │  ✖ Spanish bilabial /b/ instead of labiodental /v/        │
+ │  ── MEASURED FROM AUDIO ─────────────────────────────     │
+ │  • Transcript Source:      whisper-cpp ✔ measured         │
+ │  • Speaking Cadence:       140 WPM                        │
+ │  • Word Precision:         67%                            │
+ │  • Filler Words:           2 (um, like)                   │
+ │                                                           │
+ │  ── INFERRED BY THE MODEL FROM THE TRANSCRIPT ───────     │
+ │  • Estimated Level:        Band 5.0 (Modest)              │
+ │  • Word Stress Score:      45/100 ⚠                       │
+ │  • Connected Speech Score: 40/100 ⚠                       │
  ╰───────────────────────────────────────────────────────────╯
 ```
 
-* **Physical Voice Capture**: Multiplatform audio recording (PulseAudio/PipeWire/ALSA on Linux, DirectShow on Windows, AVFoundation on macOS).
-* **Acoustic Self-Monitoring (`[p]` Play My Voice)**: Listen to your own voice recording side-by-side with the native model (`[r]`) to develop an accurate self-monitoring ear.
-* **Spanish Phonetic Transfer Traps**: Specifically audits S-cluster epenthesis (*es-schedule*), silent letters (*should, would, debt, receipt*), and word stress (*AR-chi-tecture*).
+### What is actually measured
+
+* **Physical voice capture** — 16 kHz mono recording (PulseAudio/PipeWire/ALSA on Linux, DirectShow on Windows, AVFoundation on macOS).
+* **Local speech-to-text** — your recording is transcribed **on your machine** by [whisper.cpp](https://github.com/ggerganov/whisper.cpp) or `openai-whisper`. No audio leaves your computer. With no engine installed the lab still runs, and the scorecard reads `self-reported ⚠` instead of pretending to measure.
+* **Speaking cadence (WPM)** — computed from the transcribed word count over the *measured speech span* (first to last spoken segment), so the silence between pressing record and starting to talk does not deflate the reading.
+* **Word precision** — a token-level diff between the target sentence and your transcript, with mismatches highlighted on both sides so a substitution (*bug* → *book*) is visible, not just "something is missing".
+* **Filler words** — counted from the real transcript.
+* **Articulation confidence + diagnosis** — whisper.cpp reports a per-token probability: how strongly the audio supported each word it heard. Crucially, that number alone is **not** a pronunciation score — it measures how sure the recognizer is of what *it* heard, not whether you said the right word. Say *"pre-write the sign"* for *"prioritize"* and every token scores 0.97+ while half the sentence is wrong. So confidence is crossed with the target-vs-spoken diff:
+
+  | | high confidence | low confidence |
+  | :--- | :--- | :--- |
+  | **matches target** | correct | right word, unclear delivery |
+  | **does not match** | **confident substitution** — you spoke clearly and said something else | slurred into a different word |
+
+  A *confident substitution* is the most actionable error a learner can get, and it is exactly the one a raw clarity score hides.
+* **Self-playback comparison** — `[p]` replays your own recording, `[r]` the native model, `[s]`/`[u]` at 0.7x/0.4x. Your ear does the comparing; this part needs no algorithm at all.
+* **Silence rejection** — Whisper hallucinates phrases such as `"You"` or `"Thank you"` when fed silence. Those are discarded, so an empty recording is never scored.
+
+```text
+  • Articulation Confidence: 99/100  (how sure the recognizer was of what it heard)
+  • Diagnosis:               confident substitution ✖
+  • What changed:
+        prioritize                     ➔  pre-write the sign,      (0.97)
+        production outage immediately. ➔  revolution of the HMI.   (0.95)
+    You articulated confidently — but you articulated different words.
+```
+
+Contiguous mismatches are aligned with an LCS pass and grouped into whole spans, so you read `prioritize ➔ "pre-write the sign,"` — a diagnosable event — rather than four separately flagged words including a bewildering bare `the`.
+
+### What is inferred — but now grounded
+
+The IELTS band estimate, Word Stress Score, Connected Speech Score and IPA placement tips still come from an LLM. This project performs **no** spectral, formant, pitch or intonation analysis.
+
+What changed: the examiner is no longer guessing from spelling. It receives the diagnosis above and is constrained to it:
+
+```text
+Acoustic evidence from the speech recognizer: You articulated confidently — but
+you articulated different words. 3 word(s) were transcribed with high certainty
+and still did not match the target.
+Target phrase -> what the recognizer actually heard:
+  "prioritize" -> "pre-write the sign," (confidence 0.97);
+  "production outage immediately." -> "revolution of the HMI." (confidence 0.95).
+High confidence here means the learner articulated clearly and still produced
+the wrong sounds — diagnose which phonemes turned the target phrase into what
+was heard.
+Base your pronunciation diagnosis on these words only.
+Do not invent errors for words not listed here.
+```
+
+So *which* words you fumbled, and *whether you fumbled them confidently or by mumbling*, is measured. *Why* they came out wrong — final-consonant devoicing, S-cluster epenthesis, misplaced stress — remains a well-informed inference from a model that cannot hear you.
+
+**Read the upper half as evidence and the lower half as an expert reading of that evidence.**
+
+### Enabling measured mode
+
+```bash
+# Arch / CachyOS
+sudo pacman -S whisper-cpp
+
+# Then fetch a model into a directory LinguaGate searches:
+mkdir -p ~/.local/share/whisper && cd ~/.local/share/whisper
+curl -LO https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
+```
+
+LinguaGate auto-detects the binary and model. Override with `sttEngine` / `sttModel` in your config, or set `sttEngine: "off"` to stay in self-reported mode.
 
 ---
 
@@ -261,7 +329,7 @@ src/
 ├── modes/                # Controllers / Presentation layer (17 isolated modes)
 │   ├── path.js           # CEFR progressive learning path
 │   ├── interview.js      # Personalized 4-round tech mock interview simulator
-│   ├── speaking.js       # Strict IELTS/TOEFL speaking & pronunciation lab
+│   ├── speaking.js       # Speaking lab: local STT, word diff & AI review
 │   ├── listening.js      # Multi-speed audio dictation lab
 │   ├── verbs.js          # 3-form irregular verbs gym
 │   ├── collocations.js   # Prepositions & collocations gym
@@ -285,13 +353,16 @@ src/
 │   ├── checkpoint.js     # Checkpoint exam loader & certificate persistence
 │   ├── collocations.js   # Prepositions evaluation & random generator
 │   ├── config.js         # User preferences configuration model
+│   ├── ai/               # AI port + adapters (agy CLI, Anthropic SDK, fake)
+│   ├── tutor.js          # Domain tutoring prompts (provider-agnostic)
 │   ├── evaluator.js      # Unified exercise evaluation engine
 │   ├── exporter.js       # Anki CSV RFC-compliant formatter
 │   ├── history.js        # SuperMemo SM-2 persistence & intervals
 │   ├── interview.js      # Candidate profiling, question generator & hiring engine
 │   ├── progress.js       # CEFR progression, lesson unlocks & XP
 │   ├── recorder.js       # Multiplatform hardware microphone capture
-│   ├── speech.js         # WPM meter, filler word detector & IELTS evaluator
+│   ├── speech.js         # WPM, word diff, articulation diagnosis & AI evaluator
+│   ├── transcriber.js    # Local STT + per-word acoustic confidence
 │   ├── stats.js          # In-memory session telemetry
 │   ├── storage.js        # Atomic JSON persistence with .bak auto-recovery
 │   ├── verbs.js          # Irregular verbs pattern engine

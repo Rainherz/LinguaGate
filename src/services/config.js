@@ -10,6 +10,8 @@ function getConfigFilePath() {
  * @property {string} userName
  * @property {'normal' | 'slow' | 'ultra-slow'} audioSpeed
  * @property {'auto' | 'ffplay' | 'mpg123' | 'aplay' | 'muted'} audioPlayer
+ * @property {'auto' | 'whisper-cpp' | 'openai-whisper' | 'off'} sttEngine
+ * @property {string} sttModel
  * @property {'auto' | 'agy' | 'anthropic'} aiProvider
  * @property {string} aiModel
  * @property {'beginner' | 'intermediate' | 'advanced'} defaultDifficulty
@@ -23,6 +25,8 @@ export const DEFAULT_CONFIG = {
   userName: 'Learner',
   audioSpeed: 'normal',
   audioPlayer: 'auto',
+  sttEngine: 'auto',
+  sttModel: '',
   aiProvider: 'auto',
   aiModel: '',
   defaultDifficulty: 'beginner',
