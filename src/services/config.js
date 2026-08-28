@@ -10,6 +10,8 @@ function getConfigFilePath() {
  * @property {string} userName
  * @property {'normal' | 'slow' | 'ultra-slow'} audioSpeed
  * @property {'auto' | 'ffplay' | 'mpg123' | 'aplay' | 'muted'} audioPlayer
+ * @property {'auto' | 'agy' | 'anthropic'} aiProvider
+ * @property {string} aiModel
  * @property {'beginner' | 'intermediate' | 'advanced'} defaultDifficulty
  * @property {boolean} soundEffects
  * @property {number} dailyGoalXp
@@ -21,6 +23,8 @@ export const DEFAULT_CONFIG = {
   userName: 'Learner',
   audioSpeed: 'normal',
   audioPlayer: 'auto',
+  aiProvider: 'auto',
+  aiModel: '',
   defaultDifficulty: 'beginner',
   soundEffects: true,
   dailyGoalXp: 50,

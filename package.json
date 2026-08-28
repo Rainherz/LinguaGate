@@ -28,6 +28,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.122.0",
     "@inquirer/prompts": "^8.7.0",
     "boxen": "^8.0.1",
     "chalk": "^6.0.0",

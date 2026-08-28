@@ -1,7 +1,7 @@
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
-import { getMistakeExercise } from '../services/agy.js';
+import { getMistakeExercise } from '../services/tutor.js';
 import { getDueSrsCards, reviewSrsCard } from '../services/history.js';
 import { promptAudioFollowup } from '../services/evaluator.js';
 import { clearScreen, printAppHeader } from '../ui/display.js';
@@ -36,7 +36,7 @@ export async function runReview(stats) {
     const spinner = ora({ text: 'Loading targeted exercise & theory...', color: 'cyan', indent: 2 }).start();
     let exercise;
     try {
-      exercise = getMistakeExercise(card.rule);
+      exercise = await getMistakeExercise(card.rule);
       spinner.stop();
     } catch (err) {
       spinner.fail('Could not generate exercise.');

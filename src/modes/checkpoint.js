@@ -2,7 +2,7 @@ import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
 import { loadCheckpoint, completeCheckpoint } from '../services/checkpoint.js';
-import { checkTranslation } from '../services/agy.js';
+import { checkTranslation } from '../services/tutor.js';
 import { playAudio, isAudioSupported } from '../services/audio.js';
 import { updateStreak, recordError } from '../services/history.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
@@ -98,7 +98,7 @@ export async function runCheckpointExam(level, stats) {
       const input = (await safeInput({ message: 'Your translation ›' })).trim();
       const evalSpinner = ora({ text: 'Evaluating...', color: 'yellow', indent: 2 }).start();
       try {
-        const res = checkTranslation(q.spanish || '', input, q.expected || '');
+        const res = await checkTranslation(q.spanish || '', input, q.expected || '');
         evalSpinner.stop();
         isCorrect = res.isCorrect;
         console.log();

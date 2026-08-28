@@ -1,6 +1,6 @@
 import ora from 'ora';
 import chalk from 'chalk';
-import { getSpanishPhrase } from '../services/agy.js';
+import { getSpanishPhrase } from '../services/tutor.js';
 import { evaluateTranslationExercise } from '../services/evaluator.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeConfirm } from '../ui/prompt.js';
@@ -15,7 +15,7 @@ export async function runTranslate(stats, difficulty) {
     const spinner = ora({ text: 'Getting a phrase...', color: 'cyan', indent: 2 }).start();
     let phrase;
     try {
-      phrase = getSpanishPhrase(difficulty);
+      phrase = await getSpanishPhrase(difficulty);
       spinner.stop();
     } catch (err) {
       spinner.fail('Could not load phrase.');

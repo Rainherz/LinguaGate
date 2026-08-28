@@ -30,6 +30,8 @@ describe('Config Service (User Preferences & Settings)', () => {
       userName: 'Polyglot',
       audioSpeed: 'slow',
       audioPlayer: 'ffplay',
+      aiProvider: 'auto',
+      aiModel: '',
       defaultDifficulty: 'advanced',
       soundEffects: false,
       dailyGoalXp: 100,
@@ -38,7 +40,9 @@ describe('Config Service (User Preferences & Settings)', () => {
 
     saveConfig(custom);
     const loaded = loadConfig();
-    assert.deepEqual(loaded, custom);
+    // loadConfig merges over DEFAULT_CONFIG, so assert the round-trip of the
+    // saved values rather than the exact key set of the defaults.
+    assert.deepEqual(loaded, { ...DEFAULT_CONFIG, ...custom });
   });
 
   test('updateConfig merges partial changes without wiping other fields', () => {

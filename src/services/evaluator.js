@@ -1,6 +1,6 @@
 import ora from 'ora';
 import chalk from 'chalk';
-import { checkTranslation, checkGrammar, chatReply } from './agy.js';
+import { checkTranslation, checkGrammar, chatReply } from './tutor.js';
 import { updateStreak, recordError } from './history.js';
 import { playAudio, isAudioSupported } from './audio.js';
 import { printError, printBotReply } from '../ui/display.js';
@@ -59,7 +59,7 @@ export async function evaluateTranslationExercise({
   const evalSpinner = ora({ text: 'Evaluating...', color: 'yellow', indent: 2 }).start();
   let evaluation;
   try {
-    evaluation = checkTranslation(spanish, input, expectedEnglish);
+    evaluation = await checkTranslation(spanish, input, expectedEnglish);
     evalSpinner.stop();
   } catch {
     evalSpinner.fail('Evaluation failed');
@@ -161,7 +161,7 @@ export async function evaluateChatExercise({
   const checkSpinner = ora({ text: 'Checking grammar...', color: 'yellow', indent: 2 }).start();
   let result;
   try {
-    result = checkGrammar(input);
+    result = await checkGrammar(input);
     checkSpinner.stop();
   } catch {
     checkSpinner.fail('Check failed');
@@ -171,7 +171,7 @@ export async function evaluateChatExercise({
   console.log();
   if (result.isCorrect) {
     console.log(chalk.green('  ✔ Great grammar!'));
-    const reply = chatReply(input);
+    const reply = await chatReply(input);
     printBotReply(reply);
     updateStreak(true);
     stats.recordCorrect();

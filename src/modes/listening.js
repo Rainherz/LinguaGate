@@ -2,7 +2,7 @@ import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
 import { playAudio, isAudioSupported } from '../services/audio.js';
-import { getListeningPhrase, evaluateListening } from '../services/agy.js';
+import { getListeningPhrase, evaluateListening } from '../services/tutor.js';
 import { updateStreak, recordError } from '../services/history.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeSelect, safeConfirm, safeInput } from '../ui/prompt.js';
@@ -52,7 +52,7 @@ export async function runListening(stats) {
     const loadSpinner = ora({ text: 'Generating audio challenge...', color: 'cyan', indent: 2 }).start();
     let phrase;
     try {
-      phrase = getListeningPhrase(difficulty);
+      phrase = await getListeningPhrase(difficulty);
       loadSpinner.stop();
     } catch {
       loadSpinner.fail('Failed to generate audio phrase');
@@ -126,7 +126,7 @@ export async function runListening(stats) {
     const evalSpinner = ora({ text: 'Analyzing phonetic accuracy...', color: 'yellow', indent: 2 }).start();
     let evaluation;
     try {
-      evaluation = evaluateListening(phrase.phrase, transcription);
+      evaluation = await evaluateListening(phrase.phrase, transcription);
       evalSpinner.stop();
     } catch {
       evalSpinner.stop();

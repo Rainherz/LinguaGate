@@ -10,7 +10,7 @@ import {
   getLessonFillBlank,
   getLessonChatPrompt,
   getLessonTheory
-} from '../services/agy.js';
+} from '../services/tutor.js';
 import { loadProgress, completeLesson, isLessonUnlocked } from '../services/progress.js';
 import { isCheckpointUnlocked, isLevelCertified, loadCheckpoint } from '../services/checkpoint.js';
 import { runCheckpointExam } from './checkpoint.js';
@@ -71,7 +71,7 @@ async function runExercise(exerciseType, lesson, stats, index, total) {
     const spinner = ora({ text: 'Generating phrase...', color: 'cyan', indent: 2 }).start();
     let phrase;
     try {
-      phrase = getLessonPhrase(lesson);
+      phrase = await getLessonPhrase(lesson);
       spinner.stop();
     } catch {
       spinner.fail('Error generating phrase');
@@ -92,7 +92,7 @@ async function runExercise(exerciseType, lesson, stats, index, total) {
     const spinner = ora({ text: 'Generating blank...', color: 'cyan', indent: 2 }).start();
     let exercise;
     try {
-      exercise = getLessonFillBlank(lesson);
+      exercise = await getLessonFillBlank(lesson);
       spinner.stop();
     } catch {
       spinner.fail('Error loading exercise');
@@ -114,7 +114,7 @@ async function runExercise(exerciseType, lesson, stats, index, total) {
     const spinner = ora({ text: 'Tutor thinking...', color: 'cyan', indent: 2 }).start();
     let promptQuestion;
     try {
-      promptQuestion = getLessonChatPrompt(lesson);
+      promptQuestion = await getLessonChatPrompt(lesson);
       spinner.stop();
     } catch {
       spinner.fail('Tutor error');
@@ -138,7 +138,7 @@ async function executeSingleLesson(lesson, stats) {
 
   const theorySpinner = ora({ text: 'Loading theory...', color: 'magenta', indent: 2 }).start();
   try {
-    const theory = getLessonTheory(lesson);
+    const theory = await getLessonTheory(lesson);
     theorySpinner.stop();
     printTheoryCard(theory, lesson);
     await safeInput({ message: 'Press [ENTER] to start the exercises ›' });

@@ -2,7 +2,7 @@
 import ora from 'ora';
 import chalk from 'chalk';
 import { safeSelect, safeConfirm } from './ui/prompt.js';
-import { getWordOfDay } from './services/agy.js';
+import { getWordOfDay } from './services/tutor.js';
 import { loadHistory, recordSession } from './services/history.js';
 import { loadProgress } from './services/progress.js';
 import { loadConfig, getGreeting } from './services/config.js';
@@ -73,7 +73,7 @@ async function main() {
   // Word of the day
   const wodSpinner = ora({ text: 'Loading word of the day...', color: 'magenta', indent: 2 }).start();
   try {
-    const wod = getWordOfDay();
+    const wod = await getWordOfDay();
     wodSpinner.stop();
     printWordOfDay(wod);
     saveWordOfDay(wod);

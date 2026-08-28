@@ -2,7 +2,7 @@ import { safeSelect, safeInput } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
-import { getSlangWorkout } from '../services/agy.js';
+import { getSlangWorkout } from '../services/tutor.js';
 import { updateStreak, recordError } from '../services/history.js';
 import { promptAudioFollowup } from '../services/evaluator.js';
 import { clearScreen, printAppHeader } from '../ui/display.js';
@@ -29,7 +29,7 @@ export async function runSlang(stats) {
   const spinner = ora({ text: 'Curating native expressions...', color: 'cyan', indent: 2 }).start();
   let workout;
   try {
-    workout = getSlangWorkout(category);
+    workout = await getSlangWorkout(category);
     spinner.stop();
   } catch (err) {
     spinner.fail('Failed to load expressions');

@@ -1,6 +1,6 @@
 import ora from 'ora';
 import chalk from 'chalk';
-import { getFillBlank } from '../services/agy.js';
+import { getFillBlank } from '../services/tutor.js';
 import { evaluateFillBlankExercise } from '../services/evaluator.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeConfirm } from '../ui/prompt.js';
@@ -15,7 +15,7 @@ export async function runFillBlank(stats, difficulty) {
     const spinner = ora({ text: 'Generating exercise...', color: 'cyan', indent: 2 }).start();
     let exercise;
     try {
-      exercise = getFillBlank(difficulty);
+      exercise = await getFillBlank(difficulty);
       spinner.stop();
     } catch (err) {
       spinner.fail('Could not load exercise.');

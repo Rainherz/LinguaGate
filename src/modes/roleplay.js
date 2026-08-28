@@ -2,7 +2,7 @@ import { safeSelect, safeInput } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
-import { roleplayTurn } from '../services/agy.js';
+import { roleplayTurn } from '../services/tutor.js';
 import { updateStreak, recordError } from '../services/history.js';
 import { clearScreen, printAppHeader, printError } from '../ui/display.js';
 
@@ -117,7 +117,7 @@ export async function runRoleplay(stats) {
     const spinner = ora({ text: 'Evaluating response & objectives...', color: 'yellow', indent: 2 }).start();
     let turnResult;
     try {
-      turnResult = roleplayTurn(scenario, chatHistory, input, objectives);
+      turnResult = await roleplayTurn(scenario, chatHistory, input, objectives);
       spinner.stop();
     } catch (err) {
       spinner.fail('Evaluation error');

@@ -1,4 +1,19 @@
-import { callAgy } from './agy.js';
+import { askJson } from './ai/port.js';
+
+const SPOKEN_EVAL_SCHEMA = {
+  type: 'object',
+  properties: {
+    isCorrect: { type: 'boolean', description: 'true ONLY if pronunciation and grammar are clear and accurate' },
+    ieltsBand: { type: 'string', description: 'e.g. "Band 7.0 (Good)"' },
+    wordStressScore: { type: 'number', description: '0-100' },
+    connectedSpeechScore: { type: 'number', description: '0-100' },
+    feedback: { type: 'string', description: 'strict 1-2 sentence diagnostic in Spanish' },
+    criticalFlaws: { type: 'array', items: { type: 'string' }, description: 'phonetic or stress mistakes, in Spanish' },
+    phoneticTips: { type: 'array', items: { type: 'string' }, description: 'concrete IPA tongue/mouth placement tips' },
+    suggestions: { type: 'array', items: { type: 'string' }, description: 'natural native phrasing' }
+  },
+  required: ['isCorrect', 'ieltsBand', 'wordStressScore', 'connectedSpeechScore', 'feedback', 'criticalFlaws', 'phoneticTips', 'suggestions']
+};
 
 const FILLER_PATTERNS = [
   /\bum+\b/gi,
@@ -146,20 +161,11 @@ export async function evaluateSpokenWithAI(promptContext, spokenText, expectedTa
     `2. Silent letters & false vowels (e.g. pronouncing the 'l' in 'should' or 'would', wrong -ed endings)\n` +
     `3. Word stress placement (e.g. saying 'ar-chi-TEC-ture' instead of 'AR-chi-tecture')\n` +
     `4. Vowel reduction in function words (to, for, the, and)\n\n` +
-    `Return ONLY a raw JSON object with NO markdown formatting, NO backticks:\n` +
-    `{\n` +
-    `  "isCorrect": boolean (true ONLY if pronunciation and grammar are clear and accurate),\n` +
-    `  "ieltsBand": "Band 6.0 (Competent)" | "Band 7.0 (Good)" | "Band 8.0 (Very Good)" | "Band 5.0 (Modest)",\n` +
-    `  "wordStressScore": number (0-100),\n` +
-    `  "connectedSpeechScore": number (0-100),\n` +
-    `  "feedback": "Strict 1-2 sentence diagnostic in Spanish focusing on what MUST be corrected.",\n` +
-    `  "criticalFlaws": ["Specific phonetic or stress mistakes to eliminate (in Spanish)"],\n` +
-    `  "phoneticTips": ["Concrete IPA tip on where the tongue/mouth should be placed"],\n` +
-    `  "suggestions": ["Natural native phrasing"]\n` +
-    `}`;
+    `Judge the ieltsBand as one of: "Band 5.0 (Modest)", "Band 6.0 (Competent)", ` +
+    `"Band 7.0 (Good)", "Band 8.0 (Very Good)".`;
 
   try {
-    return JSON.parse(callAgy(prompt));
+    return /** @type {any} */ (await askJson(prompt, SPOKEN_EVAL_SCHEMA));
   } catch {
     return {
       isCorrect: true,

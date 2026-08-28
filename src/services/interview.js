@@ -1,4 +1,41 @@
-import { callAgy } from './agy.js';
+import { askJson } from './ai/port.js';
+
+const INTERVIEW_QUESTIONS_SCHEMA = {
+  type: 'object',
+  properties: {
+    questions: {
+      type: 'array',
+      description: 'exactly 4 interview rounds, numbered 1-4',
+      items: {
+        type: 'object',
+        properties: {
+          round: { type: 'number' },
+          title: { type: 'string' },
+          question: { type: 'string', description: 'clear, professional question in English' },
+          rubric: { type: 'string', description: 'what the interviewer is listening for' },
+          samplePoints: { type: 'array', items: { type: 'string' } }
+        },
+        required: ['round', 'title', 'question', 'rubric', 'samplePoints']
+      }
+    }
+  },
+  required: ['questions']
+};
+
+const HIRING_REPORT_SCHEMA = {
+  type: 'object',
+  properties: {
+    technicalDepthScore: { type: 'number', description: '0-100' },
+    spokenEnglishScore: { type: 'number', description: '0-100' },
+    starStructureScore: { type: 'number', description: '0-100' },
+    overallAverage: { type: 'number', description: '0-100' },
+    executiveSummary: { type: 'string', description: '2-3 sentence hiring committee verdict in Spanish' },
+    keyStrengths: { type: 'array', items: { type: 'string' } },
+    redFlagsOrWeaknesses: { type: 'array', items: { type: 'string' } },
+    recommendedDrill: { type: 'string' }
+  },
+  required: ['technicalDepthScore', 'spokenEnglishScore', 'starStructureScore', 'overallAverage', 'executiveSummary', 'keyStrengths', 'redFlagsOrWeaknesses', 'recommendedDrill']
+};
 
 export const ROLE_PRESETS = [
   {
@@ -77,23 +114,12 @@ export async function generateInterviewQuestions(profile) {
     `Round 2: Domain-Specific System Design & Tradeoffs (Deep dive into their stack)\n` +
     `Round 3: Live Incident Debugging & Production Outage (Scenario relevant to their technologies)\n` +
     `Round 4: Behavioral STAR Conflict & Leadership (Disagreement on a technical decision)\n\n` +
-    `Return ONLY a raw JSON array of 4 objects with NO markdown formatting, NO backticks:\n` +
-    `[\n` +
-    `  {\n` +
-    `    "round": 1,\n` +
-    `    "title": "Background & Architecture Philosophy",\n` +
-    `    "question": "Clear, professional question in English",\n` +
-    `    "rubric": "What the interviewer is specifically listening for",\n` +
-    `    "samplePoints": ["Key senior phrase/concept 1", "Key phrase/concept 2"]\n` +
-    `  },\n` +
-    `  ...\n` +
-    `]`;
+    `Number the rounds 1 through 4 in order.`;
 
   try {
-    const raw = callAgy(prompt);
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length >= 4) {
-      return parsed.slice(0, 4);
+    const { questions } = await askJson(prompt, INTERVIEW_QUESTIONS_SCHEMA);
+    if (Array.isArray(questions) && questions.length >= 4) {
+      return questions.slice(0, 4);
     }
   } catch {
     // Fallback to robust offline template
@@ -168,21 +194,10 @@ export async function generateHiringBoardReport(profile, roundsData) {
     `Role: ${profile.roleTitle} (${profile.seniority}) at ${profile.companyProfile}\n` +
     `Tech Stack: ${profile.techStack}\n\n` +
     `Interview Transcript:\n${transcriptSummary}\n\n` +
-    `Return ONLY a raw JSON object with NO markdown formatting, NO backticks:\n` +
-    `{\n` +
-    `  "technicalDepthScore": number (0-100),\n` +
-    `  "spokenEnglishScore": number (0-100),\n` +
-    `  "starStructureScore": number (0-100),\n` +
-    `  "overallAverage": number (0-100),\n` +
-    `  "executiveSummary": "Concise 2-3 sentence hiring committee verdict in Spanish",\n` +
-    `  "keyStrengths": ["Bullet point 1", "Bullet point 2"],\n` +
-    `  "redFlagsOrWeaknesses": ["Specific area that needs work in English or tech"],\n` +
-    `  "recommendedDrill": "What the candidate should practice to guarantee getting hired"\n` +
-    `}`;
+    `Score strictly; do not inflate.`;
 
   try {
-    const raw = callAgy(prompt);
-    return JSON.parse(raw);
+    return await askJson(prompt, HIRING_REPORT_SCHEMA);
   } catch {
     const avg = 78;
     return {

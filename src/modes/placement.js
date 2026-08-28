@@ -5,7 +5,7 @@ import { safeSelect, safeInput, safeConfirm } from '../ui/prompt.js';
 import ora from 'ora';
 import chalk from 'chalk';
 import boxen from 'boxen';
-import { checkTranslation } from '../services/agy.js';
+import { checkTranslation } from '../services/tutor.js';
 import { unlockUpToLevel } from '../services/progress.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 
@@ -182,7 +182,7 @@ export async function runPlacementTest() {
 
       const spinner = ora({ text: 'Evaluating translation...', color: 'yellow', indent: 2 }).start();
       try {
-        const evalResult = checkTranslation(q.spanish, input, q.correct);
+        const evalResult = await checkTranslation(q.spanish, input, q.correct);
         spinner.stop();
 
         if (evalResult.isCorrect) {

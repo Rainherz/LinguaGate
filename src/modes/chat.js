@@ -1,6 +1,6 @@
 import ora from 'ora';
 import chalk from 'chalk';
-import { checkGrammar, chatReply } from '../services/agy.js';
+import { checkGrammar, chatReply } from '../services/tutor.js';
 import { recordError, updateStreak } from '../services/history.js';
 import { clearScreen, printAppHeader, printError, printBotReply, printStreak } from '../ui/display.js';
 import { safeInput } from '../ui/prompt.js';
@@ -18,11 +18,11 @@ export async function runChat(stats) {
 
     const spinner = ora({ text: 'Checking grammar...', color: 'yellow', indent: 2 }).start();
     try {
-      const result = checkGrammar(input);
+      const result = await checkGrammar(input);
       if (result.isCorrect) {
         spinner.succeed(chalk.green('Grammar looks good! ✓'));
         spinner.start('Thinking...');
-        const reply = chatReply(input);
+        const reply = await chatReply(input);
         spinner.stop();
         printBotReply(reply);
         const streak = updateStreak(true);
