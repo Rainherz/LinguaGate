@@ -82,12 +82,13 @@ export async function getSpanishPhrase(difficulty) {
 export const FILLBLANK_SCHEMA = objectSchema({
   sentence: str('an English sentence containing exactly one "___" blank'),
   answer: str('the single correct word or short phrase for the blank'),
-  hint: str('a grammar or vocabulary hint')
+  hint: str('a grammar or vocabulary hint'),
+  explanation: str('why this answer fits the grammar rule')
 });
 
 /**
  * @param {string} difficulty
- * @returns {Promise<{ sentence: string, answer: string, hint: string }>}
+ * @returns {Promise<{ sentence: string, answer: string, hint: string, explanation: string }>}
  */
 export async function getFillBlank(difficulty) {
   return askJson(
@@ -102,18 +103,27 @@ export async function getFillBlank(difficulty) {
 }
 
 export const TRANSLATION_SCHEMA = objectSchema({
-  isCorrect: bool('true if the meaning is correct; minor wording differences are acceptable'),
+  isCorrect: bool('true if score is 80 or above'),
   score: num('0-100 accuracy score'),
-  errors: strArray('each error with the grammar theory explaining WHY it is wrong'),
-  betterVersion: str('a natural native phrasing of the sentence'),
-  feedback: str('brief encouraging summary')
+  feedback: str('one sentence summary of the overall quality'),
+  errors: {
+    type: 'array',
+    description: 'one entry per mistake; empty when the translation is correct',
+    items: objectSchema({
+      wrong: str('the exact word or phrase the user wrote'),
+      correct: str('what it should be'),
+      rule: str('the grammar rule name, e.g. "Third-person singular present tense"'),
+      theory: str('2-3 sentence explanation of the rule from scratch'),
+      example: str('a second example sentence demonstrating the correct rule')
+    })
+  }
 });
 
 /**
  * @param {string} original
  * @param {string} userTranslation
  * @param {string} correctTranslation
- * @returns {Promise<{ isCorrect: boolean, score: number, errors: string[], betterVersion: string, feedback: string }>}
+ * @returns {Promise<{ isCorrect: boolean, score: number, feedback: string, errors: Array<{ wrong: string, correct: string, rule: string, theory: string, example: string }> }>}
  */
 export async function checkTranslation(original, userTranslation, correctTranslation) {
   return askJson(
@@ -122,7 +132,8 @@ export async function checkTranslation(original, userTranslation, correctTransla
     `Correct English translation: "${correctTranslation}"\n` +
     `User translation: "${userTranslation}"\n\n` +
     `Minor wording differences are acceptable if the meaning is correct.\n` +
-    `For every error, explain the GRAMMAR THEORY behind it — not just what is wrong, but WHY.`,
+    `For every error, explain the GRAMMAR THEORY behind it — not just what is wrong, but WHY. ` +
+    `Include the rule name, how it works, and a second example to reinforce it.`,
     TRANSLATION_SCHEMA
   );
 }
