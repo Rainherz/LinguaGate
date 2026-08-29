@@ -190,18 +190,6 @@ export function recordSession(stats) {
   recordDailyActivity(earnedXp, 0);
 }
 
-export function getTopErrors(n = 3) {
-  const { errors } = loadHistory();
-  const counts = {};
-  for (const e of errors) {
-    counts[e.type] = (counts[e.type] ?? 0) + 1;
-  }
-  return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, n)
-    .map(([type, count]) => ({ type, count }));
-}
-
 export function updateStreak(correct) {
   const data = loadHistory();
   if (correct) {

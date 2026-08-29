@@ -6,7 +6,6 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import {
   recordError,
   reviewSrsCard,
-  getTopErrors,
   loadHistory,
   recordPronunciationError,
   pronunciationCardKey,
@@ -80,17 +79,6 @@ describe('SRS (Spaced Repetition / SM-2) Service', () => {
     card = loadHistory().srsCards[rule];
     assert.equal(card.repetition, 0);
     assert.equal(card.interval, 1);
-  });
-
-  test('getTopErrors sorts errors by frequency', () => {
-    recordError('rule_A', 'x', 'y');
-    recordError('rule_A', 'x', 'y');
-    recordError('rule_B', 'x', 'y');
-
-    const top = getTopErrors(2);
-    assert.ok(top.length > 0);
-    assert.equal(top[0].type, 'rule_A');
-    assert.ok(top[0].count >= 2);
   });
 
   describe('pronunciation cards', () => {
