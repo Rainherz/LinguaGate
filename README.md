@@ -8,7 +8,7 @@
 [![pnpm Version](https://img.shields.io/badge/pnpm-%3E%3D11.0.0-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io)
 [![CEFR Level](https://img.shields.io/badge/CEFR-A1%20%E2%9E%94%20C1-blue?style=flat-square)](https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)
 [![Algorithm](https://img.shields.io/badge/SRS-SuperMemo%20SM--2-orange?style=flat-square)](https://en.wikipedia.org/wiki/SuperMemo)
-[![Tests](https://img.shields.io/badge/Tests-175%2F175%20Passing-brightgreen?style=flat-square)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-224%2F224%20Passing-brightgreen?style=flat-square)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 *Master real-world English directly from your terminal. Built for developers preparing for international remote jobs in USD.*
@@ -398,6 +398,7 @@ src/
 │   ├── verbs.js          # Irregular verbs pattern engine
 │   └── vocabulary.js     # Word of the Day persistence & quiz generator
 └── ui/                   # Pure UI Components & Safe I/O
+    ├── scripted-input.js # Queue-backed input source for driving modes in tests
     ├── display.js        # Responsive boxen cards, headers & color palettes
     └── prompt.js         # Unified Inquirer adapter with Escape handling
 ```
