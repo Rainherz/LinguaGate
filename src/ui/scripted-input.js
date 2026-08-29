@@ -6,7 +6,8 @@
  * every prompt is recorded so a test can assert on the flow, not just the
  * outcome.
  *
- * @param {Array<string|boolean|number>} script answers, in the order they are consumed
+ * @param {unknown[]} script answers, in the order they are consumed. A select can
+ *   return any value, so this is deliberately unconstrained.
  */
 export function createScriptedInput(script = []) {
   const queue = [...script];

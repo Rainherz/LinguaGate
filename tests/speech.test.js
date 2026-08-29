@@ -11,7 +11,12 @@ import {
   groupSubstitutionSpans,
   scoreDictation
 } from '../src/services/speech.js';
-import { isRecorderAvailable, detectRecorderDriver } from '../src/services/recorder.js';
+import {
+  isRecorderAvailable,
+  detectRecorderDriver,
+  setRecorderDriver,
+  resetRecorderCache
+} from '../src/services/recorder.js';
 import { PRACTICE_SENTENCES } from '../src/modes/speaking.js';
 
 describe('Speech & Pronunciation Evaluation Engine', () => {
@@ -421,6 +426,24 @@ describe('Speech & Pronunciation Evaluation Engine', () => {
     test('an empty target does not claim a perfect score', () => {
       const r = scoreDictation('', 'anything');
       assert.strictEqual(r.isCorrect, false);
+    });
+  });
+
+  describe('recorder availability seam', () => {
+    test('a forced driver overrides detection', () => {
+      setRecorderDriver('ffmpeg-pulse');
+      assert.strictEqual(isRecorderAvailable(), true);
+      assert.strictEqual(detectRecorderDriver(), 'ffmpeg-pulse');
+
+      setRecorderDriver(null);
+      assert.strictEqual(isRecorderAvailable(), false);
+      resetRecorderCache();
+    });
+
+    test('resetting restores real detection', () => {
+      setRecorderDriver(null);
+      resetRecorderCache();
+      assert.strictEqual(typeof isRecorderAvailable(), 'boolean');
     });
   });
 });

@@ -9,14 +9,34 @@ function getSpeechCacheDir() {
   return dir;
 }
 
-let cachedRecorder = null;
+/**
+ * Memoised probe. `undefined` means "not probed yet"; `null` means "probed and
+ * nothing found" — the previous code used null for both, so a machine with no
+ * recorder re-probed on every call.
+ * @type {'ffmpeg-pulse' | 'ffmpeg-alsa' | 'ffmpeg-dshow' | 'ffmpeg-avfoundation' | 'arecord' | null | undefined}
+ */
+let cachedRecorder;
+
+/**
+ * Forces the detected driver. Tests use this so a mode's mic branch is
+ * deterministic instead of depending on whether the machine has ffmpeg.
+ * @param {'ffmpeg-pulse' | 'ffmpeg-alsa' | 'ffmpeg-dshow' | 'ffmpeg-avfoundation' | 'arecord' | null} driver
+ */
+export function setRecorderDriver(driver) {
+  cachedRecorder = driver;
+}
+
+/** Clears the memoised probe so the next call re-detects. */
+export function resetRecorderCache() {
+  cachedRecorder = undefined;
+}
 
 /**
  * Detects the best available audio recording driver on the system.
  * @returns {'ffmpeg-pulse' | 'ffmpeg-alsa' | 'ffmpeg-dshow' | 'ffmpeg-avfoundation' | 'arecord' | null}
  */
 export function detectRecorderDriver() {
-  if (cachedRecorder !== null) return cachedRecorder;
+  if (cachedRecorder !== undefined) return cachedRecorder;
 
   const platform = process.platform;
 
