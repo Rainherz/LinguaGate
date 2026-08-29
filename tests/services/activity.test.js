@@ -4,10 +4,12 @@ import {
   getTodayKey,
   recordDailyActivity,
   getDailyGoalProgress,
-  formatDailyGoalBar,
-  getActivityDays,
-  renderTerminalHeatmap
+  getActivityDays
 } from '../../src/services/activity.js';
+import {
+  formatDailyGoalBar,
+  renderTerminalHeatmap
+} from '../../src/ui/activity-view.js';
 import { saveHistory } from '../../src/services/history.js';
 
 describe('Daily Activity & Streak Heatmap Service', () => {

@@ -7,10 +7,10 @@ import { loadHistory, recordSession } from './services/history.js';
 import { getWeakSpots } from './services/weakspots.js';
 import { loadProgress } from './services/progress.js';
 import { loadConfig, getGreeting } from './services/config.js';
-import { formatDailyGoalBar } from './services/activity.js';
+import { formatDailyGoalBar } from './ui/activity-view.js';
 import { saveWordOfDay } from './services/vocabulary.js';
 import { SessionStats } from './services/stats.js';
-import { banner, printWordOfDay } from './ui/display.js';
+import { banner, printWordOfDay, printSessionSummary } from './ui/display.js';
 import { runOnboardingWizard } from './modes/onboarding.js';
 import { runPath } from './modes/path.js';
 import { runSpeakingLab } from './modes/speaking.js';
@@ -172,7 +172,7 @@ async function main() {
     if (modeKey === 'FILLBLANK')    await runFillBlank(stats, difficulty);
 
     if (modeKey !== 'PLACEMENT' && modeKey !== 'EXPORT' && modeKey !== 'SETTINGS') {
-      stats.print();
+      printSessionSummary(stats.getSummary());
       recordSession(stats.getSummary());
     }
 

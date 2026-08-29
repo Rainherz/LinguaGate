@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import boxen from 'boxen';
 import { loadConfig, updateConfig, resetConfig } from '../services/config.js';
-import { renderTerminalHeatmap, formatDailyGoalBar } from '../services/activity.js';
+import { renderTerminalHeatmap, formatDailyGoalBar } from '../ui/activity-view.js';
 import { clearScreen, printAppHeader } from '../ui/display.js';
 import { safeSelect, safeInput, safeConfirm } from '../ui/prompt.js';
 
