@@ -117,11 +117,18 @@ describe('Tutor schema contracts', () => {
       ['phrase', 'translation', 'phoneticIpa', 'listeningTip'],
       'LISTENING_PHRASE_SCHEMA'
     );
+    // Accuracy is measured by scoreDictation, not asked of the model.
     assertDeclares(
       tutor.LISTENING_EVAL_SCHEMA,
-      ['isCorrect', 'score', 'missedWords', 'phoneticInsight', 'feedback'],
+      ['rule', 'phoneticInsight', 'feedback'],
       'LISTENING_EVAL_SCHEMA'
     );
+    for (const measured of ['isCorrect', 'score', 'missedWords']) {
+      assert.ok(
+        !propsOf(tutor.LISTENING_EVAL_SCHEMA)[measured],
+        `LISTENING_EVAL_SCHEMA must not ask the model for "${measured}" — it is measured`
+      );
+    }
   });
 
   test('WORD_OF_DAY_SCHEMA covers what index.js renders', () => {

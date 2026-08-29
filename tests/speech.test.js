@@ -8,7 +8,8 @@ import {
   diffSpokenWords,
   formatAcousticEvidence,
   diagnoseArticulation,
-  groupSubstitutionSpans
+  groupSubstitutionSpans,
+  scoreDictation
 } from '../src/services/speech.js';
 import { isRecorderAvailable, detectRecorderDriver } from '../src/services/recorder.js';
 import { PRACTICE_SENTENCES } from '../src/modes/speaking.js';
@@ -359,6 +360,67 @@ describe('Speech & Pronunciation Evaluation Engine', () => {
         { word: 'deploy', probability: 0.98 }
       ]);
       assert.deepStrictEqual(d.spans, []);
+    });
+  });
+
+  describe('scoreDictation', () => {
+    test('a perfect transcription scores 100 and is correct', () => {
+      const r = scoreDictation('I would have avoided it.', 'I would have avoided it.');
+
+      assert.strictEqual(r.score, 100);
+      assert.strictEqual(r.isCorrect, true);
+      assert.deepStrictEqual(r.spans, []);
+    });
+
+    test('ignores case and punctuation the way a dictation check should', () => {
+      const r = scoreDictation('I would have avoided it.', 'i would have avoided it');
+      assert.strictEqual(r.score, 100);
+    });
+
+    test('scores partial hearing from the measured word overlap', () => {
+      const r = scoreDictation('I would have avoided the bug', 'I will have a boy avoided the bug');
+
+      assert.ok(r.score > 0 && r.score < 100, `unexpected score ${r.score}`);
+      assert.strictEqual(r.isCorrect, false);
+      assert.ok(r.spans.length > 0, 'the mishearing must surface as a span');
+    });
+
+    test('reports what was heard in place of what was said', () => {
+      const r = scoreDictation('I would have avoided it', 'I will have a boy avoided it');
+
+      // "have" is present on both sides, so the alignment anchors there and
+      // splits the error into a substitution plus an insertion — a more precise
+      // account than lumping the whole stretch together.
+      const substitution = r.spans.find((sp) => sp.type === 'substitution');
+      assert.strictEqual(substitution.target, 'would');
+      assert.strictEqual(substitution.spoken, 'will');
+
+      const insertion = r.spans.find((sp) => sp.type === 'insertion');
+      assert.strictEqual(insertion.spoken, 'a boy');
+    });
+
+    test('accepts a near-perfect transcription at the 85% threshold', () => {
+      // Ten words, one missed: 90% is a pass for dictation.
+      const r = scoreDictation('one two three four five six seven eight nine ten',
+        'one two three four five six seven eight nine');
+      assert.strictEqual(r.score, 90);
+      assert.strictEqual(r.isCorrect, true);
+    });
+
+    test('rejects a transcription below the threshold', () => {
+      const r = scoreDictation('one two three four five', 'one two nine ten eleven');
+      assert.strictEqual(r.isCorrect, false);
+    });
+
+    test('an empty transcription scores zero without throwing', () => {
+      const r = scoreDictation('I would have avoided it', '');
+      assert.strictEqual(r.score, 0);
+      assert.strictEqual(r.isCorrect, false);
+    });
+
+    test('an empty target does not claim a perfect score', () => {
+      const r = scoreDictation('', 'anything');
+      assert.strictEqual(r.isCorrect, false);
     });
   });
 });

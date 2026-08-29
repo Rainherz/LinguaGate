@@ -367,24 +367,49 @@ export async function getListeningPhrase(difficulty = 'beginner') {
 }
 
 export const LISTENING_EVAL_SCHEMA = objectSchema({
-  isCorrect: bool('true if the match is 85% or better'),
-  score: num('0-100'),
-  missedWords: strArray('words missed or misheard'),
-  phoneticInsight: str('explanation in Spanish of the listening challenge'),
+  rule: str(
+    'a CANONICAL, reusable name for the phonetic phenomenon behind the mishearing, ' +
+    'in Title Case — e.g. "Connected Speech: Consonant-to-Vowel Linking", ' +
+    '"Schwa Reduction in Function Words", "Elision of Final /t/". ' +
+    'Name the phenomenon, never describe this particular sentence, so the same ' +
+    'listening weakness can be tracked across sessions.'
+  ),
+  phoneticInsight: str('explanation in Spanish of why those sounds were missed'),
   feedback: str('brief encouraging summary')
 });
 
 /**
+ * Explains a dictation mishearing.
+ *
+ * Accuracy is NOT asked for here: comparing a target with what the learner typed
+ * is a measurable diff (see scoreDictation), and a model asked to score it is
+ * guessing at arithmetic. It receives the measured mishearings instead, and is
+ * spent on the part it is actually good at — why those sounds were missed.
  * @param {string} original
  * @param {string} transcription
- * @returns {Promise<{ isCorrect: boolean, score: number, missedWords: string[], phoneticInsight: string, feedback: string }>}
+ * @param {Array<{ type: string, target: string, spoken: string }>} [spans]
+ * @returns {Promise<{ rule: string, phoneticInsight: string, feedback: string }>}
  */
-export async function evaluateListening(original, transcription) {
+export async function evaluateListening(original, transcription, spans = []) {
+  const measured = spans.length > 0
+    ? spans
+      .map((sp) =>
+        sp.type === 'omission'
+          ? `heard nothing where "${sp.target}" was said`
+          : sp.type === 'insertion'
+            ? `heard an extra "${sp.spoken}"`
+            : `heard "${sp.spoken}" where "${sp.target}" was said`
+      )
+      .join('; ')
+    : 'the transcription matched';
+
   return askJson(
     `You are an English phonetics and listening comprehension tutor.\n` +
     `Original spoken sentence: "${original}"\nStudent's transcription: "${transcription}"\n\n` +
-    `Evaluate dictation accuracy and explain WHY those specific sounds were misheard ` +
-    `(linking, silent letters, schwa reduction, elision).`,
+    `The mishearings have already been measured: ${measured}.\n` +
+    `Explain WHY those specific sounds were missed — linking, schwa reduction, ` +
+    `elision, assimilation, silent letters — and name the phenomenon. ` +
+    `Do not score the attempt; that is already computed.`,
     LISTENING_EVAL_SCHEMA
   );
 }

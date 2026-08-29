@@ -159,6 +159,34 @@ export function diffSpokenWords(expected, actual) {
   return { expectedTokens, actualTokens };
 }
 
+/** A dictation counts as understood at this word-level accuracy. */
+const DICTATION_PASS_THRESHOLD = 85;
+
+/**
+ * Scores a dictation attempt by measurement rather than by asking a model.
+ *
+ * Comparing a target sentence with what the learner typed is string work, not
+ * a judgement call: the accuracy is countable and the mishearings are a diff.
+ * The model is better spent explaining WHY those particular sounds were missed.
+ * @param {string} expected
+ * @param {string} typed
+ * @returns {{ score: number, isCorrect: boolean, accuracy: { accuracyScore: number, missingWords: string[] }, spans: Array<{ type: string, target: string, spoken: string }> }}
+ */
+export function scoreDictation(expected, typed) {
+  const hasTarget = String(expected ?? '').trim().length > 0;
+  const hasAttempt = String(typed ?? '').trim().length > 0;
+
+  const accuracy = calculateWordAccuracy(expected, typed);
+  const score = hasTarget && hasAttempt ? accuracy.accuracyScore : 0;
+
+  return {
+    score,
+    isCorrect: hasTarget && hasAttempt && score >= DICTATION_PASS_THRESHOLD,
+    accuracy,
+    spans: groupSubstitutionSpans(expected, typed)
+  };
+}
+
 /**
  * Evaluates comprehensive speech metrics based on objective physical measurements.
  * @param {string} expectedText

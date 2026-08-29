@@ -8,7 +8,7 @@
 [![pnpm Version](https://img.shields.io/badge/pnpm-%3E%3D11.0.0-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io)
 [![CEFR Level](https://img.shields.io/badge/CEFR-A1%20%E2%9E%94%20C1-blue?style=flat-square)](https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)
 [![Algorithm](https://img.shields.io/badge/SRS-SuperMemo%20SM--2-orange?style=flat-square)](https://en.wikipedia.org/wiki/SuperMemo)
-[![Tests](https://img.shields.io/badge/Tests-275%2F275%20Passing-brightgreen?style=flat-square)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-283%2F283%20Passing-brightgreen?style=flat-square)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 *Master real-world English directly from your terminal. Built for developers preparing for international remote jobs in USD.*
@@ -58,7 +58,7 @@ flowchart LR
 | **🗺️ Learning Path** | `CEFR A1 ➔ C1` | 5 complete units (27 lessons) covering phonetics, tenses, conditionals, inversion, and cleft sentences with micro-theory cheat sheets. |
 | **💼 Tech Mock Interview** | `Remote Hiring` | 100% personalized 4-round tech interview tailored to your role, stack, seniority, and company type with official Hiring Committee decisions. |
 | **🎙️ Speaking Lab** | `Voice & Fluency` | Hardware mic recording transcribed locally by whisper.cpp, measured WPM cadence, target-vs-spoken word diff, filler detection, and self-playback comparison (`[p]`). |
-| **🎧 Listening Lab** | `Audio Dictation` | Blind audio listening challenge with multi-speed playback (`[r]` 1.0x, `[s]` 0.7x, `[u]` 0.4x ultra-slow) and IPA connected speech insights. |
+| **🎧 Listening Lab** | `Audio Dictation` | Blind dictation with multi-speed playback (`[r]` 1.0x, `[s]` 0.7x, `[u]` 0.4x). Accuracy is a measured word diff; the AI is spent naming and explaining the phonetic phenomenon you missed. |
 | **⚡ Irregular Verbs Gym** | `3 Forms Drill` | Master the 3 verb forms (*Infinitive ➔ Past Simple ➔ Past Participle*) organized into phonetic pattern families (*i-a-u*, *ought/aught*, *o-o-en*). |
 | **🧩 Prepositions & Collocations** | `Common Traps` | Eliminate the #1 source of learner mistakes (*depend on*, *good at*, *make a decision*, *interested in*, *pay attention*). |
 | **📚 Vocabulary Vault & Daily Quiz** | `Word Bank` | Auto-save Words of the Day and test retention with rapid 5-word definition quizzes and native audio. |

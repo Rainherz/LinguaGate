@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import { playAudio, isAudioSupported } from '../services/audio.js';
 import { getListeningPhrase, evaluateListening } from '../services/tutor.js';
+import { scoreDictation, diffSpokenWords } from '../services/speech.js';
 import { updateStreak, recordError } from '../services/history.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeSelect, safeConfirm, safeInput } from '../ui/prompt.js';
@@ -122,35 +123,47 @@ export async function runListening(stats) {
 
     if (!running) break;
 
-    // Evaluate Dictation
-    const evalSpinner = ora({ text: 'Analyzing phonetic accuracy...', color: 'yellow', indent: 2 }).start();
-    let evaluation;
-    try {
-      evaluation = await evaluateListening(phrase.phrase, transcription);
-      evalSpinner.stop();
-    } catch {
-      evalSpinner.stop();
-      evaluation = { isCorrect: false, score: 50, phoneticInsight: phrase.listeningTip };
+    // Accuracy is a diff, not a judgement call — measure it before asking the
+    // model anything, and spend the model on explaining the mishearings.
+    const dictation = scoreDictation(phrase.phrase, transcription);
+
+    let evaluation = { rule: '', phoneticInsight: '', feedback: '' };
+    if (!dictation.isCorrect) {
+      const evalSpinner = ora({ text: 'Analyzing the phonetics you missed...', color: 'yellow', indent: 2 }).start();
+      try {
+        evaluation = await evaluateListening(phrase.phrase, transcription, dictation.spans);
+        evalSpinner.stop();
+      } catch {
+        evalSpinner.stop();
+        evaluation = { rule: '', phoneticInsight: phrase.listeningTip, feedback: '' };
+      }
     }
 
     console.log();
-    if (evaluation.isCorrect) {
-      if (evaluation.score === 100) {
+    if (dictation.isCorrect) {
+      if (dictation.score === 100) {
         console.log(chalk.bold.green('  🎉 Perfect Match! (100/100) — Oído impecable!'));
       } else {
-        console.log(chalk.bold.green(`  ✔ Accepted! (${evaluation.score}/100)`));
+        console.log(chalk.bold.green(`  ✔ Accepted! (${dictation.score}/100)`));
       }
       updateStreak(true);
       stats.recordCorrect();
     } else {
-      console.log(chalk.bold.red(`  ✖ Dictation needs review (${evaluation.score}/100)`));
+      console.log(chalk.bold.red(`  ✖ Dictation needs review (${dictation.score}/100)`));
       updateStreak(false);
-      stats.recordIncorrect('listening dictation error');
-      recordError('Listening / Connected Speech', phrase.phrase, phrase.translation);
+      stats.recordIncorrect(evaluation.rule || 'listening dictation error');
+      // Key the card by the phonetic phenomenon, not a constant bucket:
+      // 'Listening / Connected Speech' collapsed every mishearing into one card.
+      recordError(evaluation.rule || 'Listening / Connected Speech', phrase.phrase, transcription);
     }
 
-    console.log(`\n  ${chalk.dim('Tu transcripción:')} ${chalk.white(transcription)}`);
-    console.log(`  ${chalk.bold.cyan('🎯 Texto Original:')}    ${chalk.bold.white(phrase.phrase)}`);
+    // Show the measured diff on both sides, so the mishearing is visible.
+    const { expectedTokens, actualTokens } = diffSpokenWords(phrase.phrase, transcription);
+    const render = (tokens, ok) =>
+      tokens.map((t) => (t.matched ? ok(t.word) : chalk.bold.red.underline(t.word))).join(' ');
+
+    console.log(`\n  ${chalk.dim('Tu transcripción:')} ${render(actualTokens, chalk.white)}`);
+    console.log(`  ${chalk.bold.cyan('🎯 Texto Original:')}    ${render(expectedTokens, chalk.bold.white)}`);
     console.log(`  ${chalk.dim('🇪🇸 Traducción:')}        ${chalk.gray(phrase.translation)}`);
     if (phrase.phoneticIpa) {
       console.log(`  ${chalk.dim('🗣️ Fonética IPA:')}       ${chalk.magenta(phrase.phoneticIpa)}`);
@@ -159,7 +172,8 @@ export async function runListening(stats) {
     if (evaluation.phoneticInsight || phrase.listeningTip) {
       console.log(
         boxen(
-          `${chalk.bold.yellow('💡 Fenómeno Fonético / Connected Speech:')}\n` +
+          `${chalk.bold.yellow('💡 Fenómeno Fonético / Connected Speech:')}` +
+          `${evaluation.rule ? ` ${chalk.dim(`(${evaluation.rule})`)}` : ''}\n` +
           `${chalk.white(evaluation.phoneticInsight || phrase.listeningTip)}`,
           {
             padding: 1,
