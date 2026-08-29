@@ -10,6 +10,7 @@ import {
   generateHiringBoardReport
 } from '../services/interview.js';
 import { isRecorderAvailable, startRecording } from '../services/recorder.js';
+import { isTranscriptionAvailable, transcribeAudio } from '../services/transcriber.js';
 import { calculateWpm } from '../services/speech.js';
 import { updateStreak } from '../services/history.js';
 import { playAudio, playAudioFile } from '../services/audio.js';
@@ -163,6 +164,7 @@ export async function runTechInterview(stats) {
     let spokenText;
     let durationSec = 10.0;
     let recordedPath;
+    let transcriptSource = 'self-reported';
 
     if (hasMic) {
       console.log(chalk.bold.yellow('\n  🎙️ Press Enter to START recording your answer (Aim for 30-60 seconds):'));
@@ -179,7 +181,7 @@ export async function runTechInterview(stats) {
       recordedPath = result.path;
 
       console.log(chalk.bold.green(`\n  ✔ Audio recorded (${durationSec}s).`));
-      console.log(chalk.gray('  🎧 [p] Listen to your recording | [r] Replay question | [Enter] Continue to transcribe\n'));
+      console.log(chalk.gray('  🎧 [p] Listen to your recording | [r] Replay question | [Enter] Continue\n'));
 
       while (true) {
         const playbackAction = (await safeInput({ message: 'Playback ([p] my response / [r] question / Enter to continue) ›' })).trim().toLowerCase();
@@ -193,9 +195,37 @@ export async function runTechInterview(stats) {
         }
       }
 
-      spokenText = (await safeInput({
-        message: 'Summary/Transcript of your spoken response ›'
-      })).trim();
+      let stt = null;
+      if (isTranscriptionAvailable()) {
+        const sttSpinner = ora({
+          text: '🧠 Transcribing your answer...',
+          color: 'magenta',
+          indent: 2
+        }).start();
+        stt = await transcribeAudio(recordedPath);
+        if (stt.success) {
+          sttSpinner.succeed(chalk.green(`Transcribed locally via ${stt.engine} 🧠`));
+        } else {
+          sttSpinner.warn(chalk.yellow(`Transcription unavailable: ${stt.error}`));
+        }
+      }
+
+      if (stt && stt.success) {
+        transcriptSource = stt.engine;
+        // Wall-clock includes the pause before you start answering; the
+        // measured speech span is what the fluency score should be built on.
+        if (stt.speechDurationSec > 0) durationSec = stt.speechDurationSec;
+        spokenText = stt.text;
+
+        console.log(`\n  ${chalk.dim('👂 What the engine heard:')}\n  ${chalk.white(`"${spokenText}"`)}\n`);
+      } else {
+        console.log(
+          chalk.yellow('\n  ⚠ No transcript — the committee will score a summary you typed, not your speech.\n')
+        );
+        spokenText = (await safeInput({
+          message: 'Type what you actually said ›'
+        })).trim();
+      }
     } else {
       spokenText = (await safeInput({
         message: 'Type your spoken response ›'
@@ -207,12 +237,20 @@ export async function runTechInterview(stats) {
     const words = spokenText.split(/\s+/).filter(Boolean).length;
     const wpmData = calculateWpm(words, durationSec);
 
+    console.log(
+      `  ${chalk.dim('• Speaking Cadence:')}   ${chalk.white(wpmData.label)}  ` +
+      (transcriptSource === 'self-reported'
+        ? chalk.yellow('(self-reported ⚠)')
+        : chalk.green(`(${transcriptSource} ✔ measured)`))
+    );
+
     roundsData.push({
       round: q.round,
       title: q.title,
       question: q.question,
       answer: spokenText,
-      wpm: wpmData.wpm
+      wpm: wpmData.wpm,
+      transcriptSource
     });
 
     printDivider();

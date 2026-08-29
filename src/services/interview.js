@@ -179,14 +179,37 @@ export function calculateHiringVerdict(averageScore) {
 }
 
 /**
+ * Renders the interview transcript for the hiring committee, marking each round
+ * by how its text was obtained.
+ *
+ * This matters because the committee reports a spoken-English CEFR band. When a
+ * round was typed rather than transcribed, scoring fluency from it invents a
+ * measurement — so the provenance travels with the text and the model is told
+ * not to grade delivery on those rounds.
+ * @param {Array<{ round: number, question: string, answer: string, wpm: number, transcriptSource?: string }>} roundsData
+ * @returns {string}
+ */
+export function buildTranscriptSummary(roundsData) {
+  return (roundsData || [])
+    .map((r) => {
+      const measured = r.transcriptSource && r.transcriptSource !== 'self-reported';
+      const provenance = measured
+        ? `transcribed from audio by ${r.transcriptSource}; ${r.wpm} WPM measured over the spoken span`
+        : `TYPED BY THE CANDIDATE, not speech (self-reported) — do not score pronunciation, ` +
+          `fluency or pace from this round; the ${r.wpm} WPM figure is not a speaking rate`;
+
+      return `Round ${r.round}: "${r.question}"\nCandidate answer (${provenance}):\n"${r.answer}"`;
+    })
+    .join('\n\n');
+}
+
+/**
  * Generates final Hiring Board Review with AI.
  * @param {CandidateProfile} profile
  * @param {Array<{ round: number, question: string, answer: string, wpm: number }>} roundsData
  */
 export async function generateHiringBoardReport(profile, roundsData) {
-  const transcriptSummary = roundsData
-    .map((r) => `Round ${r.round}: "${r.question}"\nCandidate Spoke: "${r.answer}" (Speed: ${r.wpm} WPM)`)
-    .join('\n\n');
+  const transcriptSummary = buildTranscriptSummary(roundsData);
 
   const prompt =
     `You are the Head of the Engineering Hiring Committee at a top US tech company.\n` +
@@ -194,7 +217,8 @@ export async function generateHiringBoardReport(profile, roundsData) {
     `Role: ${profile.roleTitle} (${profile.seniority}) at ${profile.companyProfile}\n` +
     `Tech Stack: ${profile.techStack}\n\n` +
     `Interview Transcript:\n${transcriptSummary}\n\n` +
-    `Score strictly; do not inflate.`;
+    `Score strictly; do not inflate. Base spokenEnglishScore only on rounds that were ` +
+    `transcribed from audio; if none were, say so in executiveSummary and score it conservatively.`;
 
   try {
     return await askJson(prompt, HIRING_REPORT_SCHEMA);

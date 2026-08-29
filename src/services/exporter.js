@@ -1,7 +1,7 @@
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadHistory } from './history.js';
+import { loadHistory, getCardKind } from './history.js';
 import { loadProgress } from './progress.js';
 import { loadVerbs } from './verbs.js';
 
@@ -18,6 +18,47 @@ function ensureExportDir() {
  * Exports all SRS flashcards and errors to an Anki-compatible CSV file.
  * Format: "Front (HTML/Text)","Back (HTML/Text)","Tags"
  */
+
+/**
+ * Renders one SRS card for export.
+ *
+ * Pronunciation cards store `target` / `lastSpoken`; grammar cards store
+ * `lastMistake`. Reading only the latter produced pronunciation cards with an
+ * empty back — a deck of dead cards.
+ * @param {{ kind?: string, rule?: string, target?: string, lastSpoken?: string, confidence?: number|null, lastMistake?: { original?: string, corrected?: string } }} card
+ * @returns {{ front: string, back: string, tags: string }}
+ */
+function renderCard(card) {
+  if (getCardKind(card) === 'pronunciation') {
+    return {
+      front: `<b>Say this out loud:</b> ${card.target}` +
+        (card.lastSpoken ? `<br><i>Last time it came out as: ${card.lastSpoken}</i>` : ''),
+      back: `<b>Target:</b> ${card.target}` +
+        (card.lastSpoken ? `<br><b>You said:</b> ${card.lastSpoken}` : '') +
+        (typeof card.confidence === 'number'
+          ? `<br><b>Recognizer confidence:</b> ${card.confidence.toFixed(2)}`
+          : ''),
+      tags: 'LinguaGate::Pronunciation SRS'
+    };
+  }
+
+  return {
+    front: `<b>Rule Check:</b> ${card.rule}<br><i>Last context: ${card.lastMistake?.original || 'Practice'}</i>`,
+    back: `<b>Correct:</b> ${card.lastMistake?.corrected || ''}<br><b>Rule:</b> ${card.rule}`,
+    tags: 'LinguaGate::Grammar SRS'
+  };
+}
+
+/**
+ * @param {{ kind?: string, target?: string, lastSpoken?: string, lastMistake?: { original?: string, corrected?: string } }} card
+ * @returns {string} the "wrong -> right" context column
+ */
+function cardContext(card) {
+  return getCardKind(card) === 'pronunciation'
+    ? `\`${card.lastSpoken || ''}\` ➔ \`${card.target || ''}\``
+    : `\`${card.lastMistake?.original || ''}\` ➔ \`${card.lastMistake?.corrected || ''}\``;
+}
+
 export function exportToAnkiCsv() {
   ensureExportDir();
   const history = loadHistory();
@@ -28,10 +69,7 @@ export function exportToAnkiCsv() {
 
   // 1. Export SRS Cards
   for (const card of srsCards) {
-    const front = `<b>Rule Check:</b> ${card.rule}<br><i>Last context: ${card.lastMistake?.original || 'Practice'}</i>`;
-    const back = `<b>Correct:</b> ${card.lastMistake?.corrected || ''}<br><b>Rule:</b> ${card.rule}`;
-    const tags = 'LinguaGate::Grammar SRS';
-
+    const { front, back, tags } = renderCard(card);
     csvContent += `"${escapeCsv(front)}","${escapeCsv(back)}","${tags}"\n`;
   }
 
@@ -75,7 +113,7 @@ export function exportToMarkdownNotebook() {
     md += `| Rule | Frequency | Interval (Days) | Last Mistake Context |\n`;
     md += `| :--- | :--- | :--- | :--- |\n`;
     cards.forEach((c) => {
-      md += `| **${c.rule}** | ${c.count || 1}x | ${c.interval || 1}d | \`${c.lastMistake?.original || ''}\` ➔ \`${c.lastMistake?.corrected || ''}\` |\n`;
+      md += `| **${c.rule}** | ${c.count || 1}x | ${c.interval || 1}d | ${cardContext(c)} |\n`;
     });
     md += '\n';
   } else {
