@@ -32,8 +32,10 @@ export async function runChat(stats) {
         spinner.fail(chalk.red('Grammar error.'));
         printError(result);
         updateStreak(false);
-        stats.recordIncorrect(result.corrections?.[0] ?? 'grammar error');
-        result.corrections?.forEach((c) => recordError(c, input, result.correctedText));
+        stats.recordIncorrect(result.corrections?.[0]?.rule ?? 'grammar error');
+        // Key cards by the rule name: free-text corrections produced a new
+        // card per phrasing, so nothing ever came up for review twice.
+        result.corrections?.forEach((c) => recordError(c.rule, input, result.correctedText));
       }
     } catch (err) {
       spinner.fail(chalk.red('Something went wrong.'));

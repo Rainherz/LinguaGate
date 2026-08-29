@@ -34,14 +34,28 @@ const objectSchema = (properties) => ({
 
 export const GRAMMAR_SCHEMA = objectSchema({
   isCorrect: bool('true only if the text has NO grammar or spelling errors'),
-  corrections: strArray('specific errors found; empty when isCorrect is true'),
+  corrections: {
+    type: 'array',
+    description: 'one entry per mistake; empty when isCorrect is true',
+    items: objectSchema({
+      wrong: str('the exact word or phrase the user wrote'),
+      correct: str('what it should be'),
+      rule: str(
+        'a CANONICAL, reusable grammar rule name in Title Case, e.g. ' +
+        '"Past Simple with Irregular Verbs" or "Third-Person Singular Agreement". ' +
+        'Name the rule, never describe this particular sentence — the same mistake ' +
+        'must always produce the same name so it can be tracked over time.'
+      ),
+      explanation: str('one sentence on why it is wrong, in simple English')
+    })
+  },
   correctedText: str('the fixed version of the text'),
   explanation: str('brief explanation in simple English; empty when isCorrect is true')
 });
 
 /**
  * @param {string} text
- * @returns {Promise<{ isCorrect: boolean, corrections: string[], correctedText: string, explanation: string }>}
+ * @returns {Promise<{ isCorrect: boolean, corrections: Array<{ wrong: string, correct: string, rule: string, explanation: string }>, correctedText: string, explanation: string }>}
  */
 export async function checkGrammar(text) {
   return askJson(
@@ -250,7 +264,21 @@ export async function getLessonTheory(lesson) {
 export const ROLEPLAY_SCHEMA = objectSchema({
   grammar: objectSchema({
     isCorrect: bool('true if the message has no serious errors'),
-    corrections: strArray('errors found'),
+    corrections: {
+    type: 'array',
+    description: 'one entry per mistake; empty when isCorrect is true',
+    items: objectSchema({
+      wrong: str('the exact word or phrase the user wrote'),
+      correct: str('what it should be'),
+      rule: str(
+        'a CANONICAL, reusable grammar rule name in Title Case, e.g. ' +
+        '"Past Simple with Irregular Verbs" or "Third-Person Singular Agreement". ' +
+        'Name the rule, never describe this particular sentence — the same mistake ' +
+        'must always produce the same name so it can be tracked over time.'
+      ),
+      explanation: str('one sentence on why it is wrong, in simple English')
+    })
+  },
     correctedText: str('corrected message'),
     explanation: str('brief explanation')
   }),
@@ -267,7 +295,7 @@ export const ROLEPLAY_SCHEMA = objectSchema({
  * @param {any[]} chatHistory
  * @param {string} userMessage
  * @param {any[]} objectives
- * @returns {Promise<{ grammar: { isCorrect: boolean, corrections: string[], correctedText: string, explanation: string }, newlyCompletedIds: number[], characterReply: string }>}
+ * @returns {Promise<{ grammar: { isCorrect: boolean, corrections: Array<{ wrong: string, correct: string, rule: string, explanation: string }>, correctedText: string, explanation: string }, newlyCompletedIds: number[], characterReply: string }>}
  */
 export async function roleplayTurn(scenario, chatHistory, userMessage, objectives) {
   return askJson(

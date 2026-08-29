@@ -28,7 +28,17 @@ export function saveHistory(data) {
   writeJsonAtomic(getHistoryFilePath(), data);
 }
 
-export function recordError(errorType, original, corrected) {
+/**
+ * Canonicalizes a rule name so trivial drift does not fragment a card.
+ * @param {string} rule
+ * @returns {string}
+ */
+export function normalizeRuleName(rule) {
+  return String(rule ?? '').replace(/\s+/g, ' ').trim();
+}
+
+export function recordError(rawErrorType, original, corrected) {
+  const errorType = normalizeRuleName(rawErrorType);
   if (!errorType) return;
   const data = loadHistory();
   data.errors.push({ type: errorType, original, corrected, timestamp: new Date().toISOString() });

@@ -27,6 +27,25 @@ describe('Tutor schema contracts', () => {
     assertDeclares(tutor.GRAMMAR_SCHEMA, ['isCorrect', 'corrections', 'correctedText'], 'GRAMMAR_SCHEMA');
   });
 
+  test('GRAMMAR_SCHEMA corrections carry a reusable rule name, not free text', () => {
+    // Free-text corrections were used directly as SRS card keys, so the same
+    // mistake phrased three ways produced three cards that never repeat.
+    const corrections = propsOf(tutor.GRAMMAR_SCHEMA).corrections;
+
+    assert.strictEqual(corrections.type, 'array');
+    assert.strictEqual(corrections.items?.type, 'object', 'each correction must be an object');
+    for (const field of ['wrong', 'correct', 'rule', 'explanation']) {
+      assert.ok(corrections.items.properties?.[field], `corrections must declare "${field}"`);
+    }
+    assert.ok(corrections.items.required?.includes('rule'), '"rule" is the SRS card key');
+  });
+
+  test('ROLEPLAY_SCHEMA grammar corrections have the same shape', () => {
+    const corrections = propsOf(tutor.ROLEPLAY_SCHEMA).grammar.properties.corrections;
+    assert.strictEqual(corrections.items?.type, 'object');
+    assert.ok(corrections.items.properties?.rule);
+  });
+
   test('PHRASE_SCHEMA covers what translate.js and path.js read', () => {
     assertDeclares(tutor.PHRASE_SCHEMA, ['spanish', 'english', 'hint'], 'PHRASE_SCHEMA');
   });

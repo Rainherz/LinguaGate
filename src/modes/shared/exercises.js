@@ -189,7 +189,7 @@ export async function evaluateChatExercise({
     printError(result);
     updateStreak(false);
     stats.recordIncorrect(grammarRule);
-    result.corrections?.forEach((c) => recordError(c, input, result.correctedText));
+    result.corrections?.forEach((c) => recordError(c.rule, input, result.correctedText));
     if (result.correctedText) {
       await promptAudioFollowup(result.correctedText);
     }

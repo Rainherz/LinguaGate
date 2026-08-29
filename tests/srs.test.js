@@ -200,4 +200,23 @@ describe('SRS (Spaced Repetition / SM-2) Service', () => {
       assert.strictEqual(updated.repetition, 1, 'the card must actually advance');
     });
   });
+
+  describe('rule-name keying', () => {
+    test('the same rule recorded with different padding is one card', () => {
+      recordError('Past Simple with Irregular Verbs', 'a', 'b');
+      recordError('  Past Simple with Irregular Verbs  ', 'c', 'd');
+      recordError('Past Simple  with   Irregular Verbs', 'e', 'f');
+
+      const cards = loadHistory().srsCards;
+      assert.strictEqual(Object.keys(cards).length, 1, `expected one card, got ${Object.keys(cards)}`);
+      assert.strictEqual(cards['Past Simple with Irregular Verbs'].count, 3);
+    });
+
+    test('genuinely different rules stay separate', () => {
+      recordError('Past Simple with Irregular Verbs', 'a', 'b');
+      recordError('Third-Person Singular Agreement', 'a', 'b');
+
+      assert.strictEqual(Object.keys(loadHistory().srsCards).length, 2);
+    });
+  });
 });

@@ -129,8 +129,8 @@ export async function runRoleplay(stats) {
       console.log();
       printError(turnResult.grammar);
       updateStreak(false);
-      stats.recordIncorrect(turnResult.grammar?.corrections?.[0] ?? 'roleplay grammar error');
-      turnResult.grammar?.corrections?.forEach((c) => recordError(c, input, turnResult.grammar.correctedText));
+      stats.recordIncorrect(turnResult.grammar?.corrections?.[0]?.rule ?? 'roleplay grammar error');
+      turnResult.grammar?.corrections?.forEach((c) => recordError(c.rule, input, turnResult.grammar.correctedText));
       await safeInput({ message: 'Press [ENTER] to retry your answer ›' });
       continue;
     }

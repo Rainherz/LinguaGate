@@ -38,7 +38,13 @@ export function printError(result) {
   console.log(chalk.red('  ✖ Grammar error — fix it and try again.\n'));
   if (result.corrections?.length > 0) {
     console.log(chalk.yellow('  Errors found:'));
-    result.corrections.forEach((c) => console.log(chalk.yellow(`    • ${c}`)));
+    result.corrections.forEach((c) => {
+      console.log(
+        `    ${chalk.red('✖')} ${chalk.yellow(c.wrong)} ${chalk.dim('→')} ${chalk.green(c.correct)}` +
+        `  ${chalk.dim(`(${c.rule})`)}`
+      );
+      if (c.explanation) console.log(`       ${chalk.gray(c.explanation)}`);
+    });
   }
   if (result.correctedText) {
     console.log(chalk.gray(`\n  Suggestion: ${chalk.white(result.correctedText)}`));
