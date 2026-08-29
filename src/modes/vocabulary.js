@@ -4,7 +4,7 @@ import { loadVocabulary, generateVocabQuestion, recordWordQuizResult } from '../
 import { updateStreak } from '../services/history.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeSelect, safeConfirm } from '../ui/prompt.js';
-import { promptAudioFollowup } from '../services/evaluator.js';
+import { promptAudioFollowup } from './shared/exercises.js';
 
 export async function runVocabularyVault(stats) {
   while (true) {

@@ -1,7 +1,7 @@
 import ora from 'ora';
 import chalk from 'chalk';
 import { getSpanishPhrase } from '../services/tutor.js';
-import { evaluateTranslationExercise } from '../services/evaluator.js';
+import { evaluateTranslationExercise } from './shared/exercises.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeConfirm } from '../ui/prompt.js';
 

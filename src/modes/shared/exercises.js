@@ -1,10 +1,20 @@
 import ora from 'ora';
 import chalk from 'chalk';
-import { checkTranslation, checkGrammar, chatReply } from './tutor.js';
-import { updateStreak, recordError } from './history.js';
-import { playAudio, isAudioSupported } from './audio.js';
-import { printError, printBotReply } from '../ui/display.js';
-import { safeInput } from '../ui/prompt.js';
+import { checkTranslation, checkGrammar, chatReply } from '../../services/tutor.js';
+import { updateStreak, recordError } from '../../services/history.js';
+import { playAudio, isAudioSupported } from '../../services/audio.js';
+import { gradeFillBlank, sanitizeForSpeech, parseAudioAction } from '../../services/grading.js';
+import { printError, printBotReply } from '../../ui/display.js';
+import { safeInput } from '../../ui/prompt.js';
+
+/**
+ * Interactive exercise flows shared across modes.
+ *
+ * These live under modes/ rather than services/ because they are terminal
+ * orchestration: they prompt, print, spin, and drive the session. They compose
+ * the pure rules from services/grading.js with the AI port and the history
+ * store — but they are not themselves a service.
+ */
 
 /**
  * Prompts user with options to listen to the phrase audio (1.0x / 0.7x) or continue immediately.
@@ -13,26 +23,24 @@ import { safeInput } from '../ui/prompt.js';
 export async function promptAudioFollowup(phrase) {
   if (!phrase || !isAudioSupported()) return;
 
-  const cleanPhrase = phrase.replace(/<\/?[^>]+(>|$)/g, '').trim();
+  const cleanPhrase = sanitizeForSpeech(phrase);
   if (!cleanPhrase) return;
 
   while (true) {
-    const action = (
+    const action = parseAudioAction(
       await safeInput({
         message: `${chalk.dim('[ENTER] Next')} • ${chalk.cyan('[a] 🔊 Audio')} • ${chalk.yellow('[s] 🐢 Slow')} ›`
       })
-    ).trim().toLowerCase();
+    );
 
-    if (!action || action === 'next' || action === 'c' || action === '/quit') {
-      break;
-    }
+    if (action === 'continue') break;
 
-    if (action === 'a' || action === 'audio') {
+    if (action === 'normal') {
       const spinner = ora({ text: '🔊 Playing native pronunciation...', color: 'cyan', indent: 2 }).start();
       await playAudio(cleanPhrase, { speed: 'normal' });
       spinner.succeed(chalk.green('Audio played 🔊'));
       console.log();
-    } else if (action === 's' || action === 'slow') {
+    } else if (action === 'slow') {
       const spinner = ora({ text: '🐢 Playing slow pronunciation (0.7x)...', color: 'yellow', indent: 2 }).start();
       await playAudio(cleanPhrase, { speed: 'slow' });
       spinner.succeed(chalk.green('Slow audio played 🐢'));
@@ -121,7 +129,7 @@ export async function evaluateFillBlankExercise({
   const input = (await safeInput({ message: 'Your answer ›' })).trim();
   if (!input || input === '/quit') return { isCorrect: false, quit: input === '/quit' };
 
-  const isMatch = input.toLowerCase() === answer.toLowerCase().trim();
+  const isMatch = gradeFillBlank(input, answer);
   console.log();
   const fullSentence = sentence.replace('___', answer);
 

@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import { getSlangWorkout } from '../services/tutor.js';
 import { updateStreak, recordError } from '../services/history.js';
-import { promptAudioFollowup } from '../services/evaluator.js';
+import { promptAudioFollowup } from './shared/exercises.js';
 import { clearScreen, printAppHeader } from '../ui/display.js';
 
 export async function runSlang(stats) {

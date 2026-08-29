@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import { getMistakeExercise } from '../services/tutor.js';
 import { getDueSrsCards, reviewSrsCard, getCardKind, srsCardKey } from '../services/history.js';
-import { promptAudioFollowup } from '../services/evaluator.js';
+import { promptAudioFollowup } from './shared/exercises.js';
 import { isRecorderAvailable, startRecording } from '../services/recorder.js';
 import { isTranscriptionAvailable, transcribeAudio } from '../services/transcriber.js';
 import { diagnoseArticulation, diffSpokenWords } from '../services/speech.js';

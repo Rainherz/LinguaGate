@@ -4,7 +4,7 @@ import { getCollocationsByCategory, evaluateCollocationAnswer } from '../service
 import { updateStreak, recordError } from '../services/history.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeSelect, safeConfirm, safeInput } from '../ui/prompt.js';
-import { promptAudioFollowup } from '../services/evaluator.js';
+import { promptAudioFollowup } from './shared/exercises.js';
 
 export async function runCollocationsGym(stats) {
   clearScreen();

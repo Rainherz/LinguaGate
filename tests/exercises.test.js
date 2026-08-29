@@ -1,9 +1,9 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { promptAudioFollowup, evaluateTranslationExercise, evaluateFillBlankExercise, evaluateChatExercise } from '../src/services/evaluator.js';
+import { promptAudioFollowup, evaluateTranslationExercise, evaluateFillBlankExercise, evaluateChatExercise } from '../src/modes/shared/exercises.js';
 
 describe('Evaluator Service with Audio Integration', () => {
-  test('evaluator functions are properly exported', () => {
+  test('exercise flows are properly exported', () => {
     assert.equal(typeof promptAudioFollowup, 'function');
     assert.equal(typeof evaluateTranslationExercise, 'function');
     assert.equal(typeof evaluateFillBlankExercise, 'function');

@@ -24,7 +24,7 @@ import {
   evaluateTranslationExercise,
   evaluateFillBlankExercise,
   evaluateChatExercise
-} from '../services/evaluator.js';
+} from './shared/exercises.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const curriculumPath = join(__dirname, '../curriculum.json');

@@ -1,7 +1,7 @@
 import ora from 'ora';
 import chalk from 'chalk';
 import { getFillBlank } from '../services/tutor.js';
-import { evaluateFillBlankExercise } from '../services/evaluator.js';
+import { evaluateFillBlankExercise } from './shared/exercises.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeConfirm } from '../ui/prompt.js';
 

@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import { getVerbsByLevel, evaluateVerbAnswer } from '../services/verbs.js';
 import { updateStreak, recordError } from '../services/history.js';
-import { promptAudioFollowup } from '../services/evaluator.js';
+import { promptAudioFollowup } from './shared/exercises.js';
 import { clearScreen, printAppHeader, printDivider } from '../ui/display.js';
 import { safeSelect, safeConfirm, safeInput } from '../ui/prompt.js';
 
