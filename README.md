@@ -8,7 +8,7 @@
 [![pnpm Version](https://img.shields.io/badge/pnpm-%3E%3D11.0.0-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io)
 [![CEFR Level](https://img.shields.io/badge/CEFR-A1%20%E2%9E%94%20C1-blue?style=flat-square)](https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)
 [![Algorithm](https://img.shields.io/badge/SRS-SuperMemo%20SM--2-orange?style=flat-square)](https://en.wikipedia.org/wiki/SuperMemo)
-[![Tests](https://img.shields.io/badge/Tests-224%2F224%20Passing-brightgreen?style=flat-square)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-240%2F240%20Passing-brightgreen?style=flat-square)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 *Master real-world English directly from your terminal. Built for developers preparing for international remote jobs in USD.*
@@ -226,6 +226,39 @@ Note the ordering: `third_person_s` has the **highest** raw error count and rank
 
 ---
 
+## 🔊 Speech Synthesis
+
+Reference audio comes from a swappable engine, chosen by **output quality** rather than by what happens to be installed:
+
+| Engine | Voice | Network | Speed control |
+| :--- | :--- | :---: | :--- |
+| `piper` | neural, natural | no | native |
+| `google` | natural | **yes** | playback time-stretch |
+| `espeak-ng` | formant, robotic | no | native |
+
+The ordering is deliberate. This app is used for **shadowing** — you imitate the reference voice — so ranking an audibly robotic engine above a natural-sounding one would teach the wrong prosody. `espeak-ng` is a fallback for when nothing better exists, not a preference.
+
+Local engines change the speaking rate at synthesis time, which preserves pitch. Only the pre-rendered network clip has to be time-stretched during playback:
+
+```text
+espeak-ng  normal      38ms   2.58s clip
+espeak-ng  slow        19ms   3.78s clip
+espeak-ng  ultra-slow  21ms   4.93s clip
+google     normal     833ms   (network round trip per phrase)
+```
+
+Set `ttsEngine` to `auto`, `piper`, `google`, `espeak-ng`, or `off`. For the best offline voice:
+
+```bash
+pip install piper-tts
+# then drop a .onnx voice into a directory LinguaGate searches:
+mkdir -p ~/.local/share/piper   # or set PIPER_MODEL / ttsModel
+```
+
+Clips are cached under `cache/audio`, keyed by engine, speed and voice — not by text alone, so two engines can never serve each other's audio.
+
+---
+
 ## 📊 30-Day Activity Heatmap & Daily Goals
 
 Stay accountable with a GitHub-style terminal matrix:
@@ -392,6 +425,7 @@ src/
 │   ├── recorder.js       # Multiplatform hardware microphone capture
 │   ├── speech.js         # WPM, word diff, articulation diagnosis & AI evaluator
 │   ├── transcriber.js    # Local STT + per-word acoustic confidence
+│   ├── tts.js            # Speech synthesis port (piper / google / espeak-ng)
 │   ├── stats.js          # In-memory session telemetry
 │   ├── weakspots.js      # Mastery-weighted ranking of recurring mistakes
 │   ├── storage.js        # Atomic JSON persistence with .bak auto-recovery

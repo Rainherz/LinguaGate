@@ -12,6 +12,9 @@ function getConfigFilePath() {
  * @property {'auto' | 'ffplay' | 'mpg123' | 'aplay' | 'muted'} audioPlayer
  * @property {'auto' | 'whisper-cpp' | 'openai-whisper' | 'off'} sttEngine
  * @property {string} sttModel
+ * @property {'auto' | 'piper' | 'google' | 'espeak-ng' | 'off'} ttsEngine
+ * @property {string} ttsVoice
+ * @property {string} ttsModel
  * @property {'auto' | 'agy' | 'anthropic'} aiProvider
  * @property {string} aiModel
  * @property {'beginner' | 'intermediate' | 'advanced'} defaultDifficulty
@@ -27,6 +30,9 @@ export const DEFAULT_CONFIG = {
   audioPlayer: 'auto',
   sttEngine: 'auto',
   sttModel: '',
+  ttsEngine: 'auto',
+  ttsVoice: 'en-us',
+  ttsModel: '',
   aiProvider: 'auto',
   aiModel: '',
   defaultDifficulty: 'beginner',
