@@ -4,6 +4,39 @@ import { loadConfig, updateConfig, resetConfig } from '../services/config.js';
 import { renderTerminalHeatmap, formatDailyGoalBar } from '../ui/activity-view.js';
 import { clearScreen, printAppHeader } from '../ui/display.js';
 import { safeSelect, safeInput, safeConfirm } from '../ui/prompt.js';
+import {
+  describeAiProviders,
+  describeSttEngines,
+  describeTtsEngines
+} from '../services/engine-status.js';
+import { resetProviderCache } from '../services/ai/index.js';
+import { resetTranscriberCache } from '../services/transcriber.js';
+import { resetTtsCache } from '../services/tts.js';
+
+/**
+ * Renders one engine report as a selectable list.
+ * Unavailable engines stay on the list, marked and annotated: hiding them
+ * hides the capability, and the annotation is what tells you how to get it.
+ * @param {import('../services/engine-status.js').EngineReport} report
+ */
+function engineChoices(report) {
+  return [
+    ...report.options.map((o) => ({
+      name:
+        `${o.available ? chalk.green('✔') : chalk.red('✖')} ${chalk.white(o.label)}` +
+        `${o.value === report.selected ? chalk.cyan('  ← current') : ''}` +
+        `\n      ${chalk.dim(o.detail)}`,
+      value: o.value
+    })),
+    { name: '🔙 Cancel', value: 'CANCEL' }
+  ];
+}
+
+/** Formats `saved → what actually runs` for the menu label. */
+function engineLabel(report) {
+  if (report.selected === report.resolved || report.resolved === null) return report.selected;
+  return `${report.selected} → ${report.resolved}`;
+}
 
 export async function runSettings() {
   while (true) {
@@ -19,7 +52,10 @@ export async function runSettings() {
       `  ${chalk.dim('• Default Audio Speed:')} ${chalk.yellow(config.audioSpeed)}\n` +
       `  ${chalk.dim('• Audio Engine:')}        ${chalk.green(config.audioPlayer)}\n` +
       `  ${chalk.dim('• Default Difficulty:')}  ${chalk.magenta(config.defaultDifficulty)}\n` +
-      `  ${chalk.dim('• Sound Effects:')}       ${chalk.white(config.soundEffects ? 'Enabled' : 'Disabled')}`;
+      `  ${chalk.dim('• Sound Effects:')}       ${chalk.white(config.soundEffects ? 'Enabled' : 'Disabled')}\n` +
+      `  ${chalk.dim('• AI Provider:')}         ${chalk.blue(engineLabel(describeAiProviders(config)))}\n` +
+      `  ${chalk.dim('• Speech-to-Text:')}      ${chalk.blue(engineLabel(describeSttEngines(config)))}\n` +
+      `  ${chalk.dim('• Voice Engine:')}        ${chalk.blue(engineLabel(describeTtsEngines(config)))}`;
 
     console.log(
       boxen(summaryText, {
@@ -40,6 +76,9 @@ export async function runSettings() {
         { name: `🔊 Change Default Audio Speed (${config.audioSpeed})`, value: 'SPEED' },
         { name: `🎧 Change Audio Engine / Mute (${config.audioPlayer})`, value: 'ENGINE' },
         { name: `🎓 Change Default Difficulty (${config.defaultDifficulty})`, value: 'DIFFICULTY' },
+        { name: `🧠 AI Provider (${engineLabel(describeAiProviders(config))})`, value: 'AI' },
+        { name: `🎙️  Speech-to-Text (${engineLabel(describeSttEngines(config))})`, value: 'STT' },
+        { name: `🔊 Voice Engine (${engineLabel(describeTtsEngines(config))})`, value: 'TTS' },
         { name: `👤 Edit User Name (${config.userName})`, value: 'NAME' },
         { name: '🔄 Reset All Settings to Defaults', value: 'RESET' }
       ]
@@ -138,6 +177,40 @@ export async function runSettings() {
       }
     }
 
+    if (action === 'AI') {
+      const choice = await safeSelect({
+        message: 'Select the AI provider:',
+        choices: engineChoices(describeAiProviders(config))
+      });
+      if (choice && choice !== 'CANCEL') {
+        updateConfig({ aiProvider: choice });
+        // Without this the previous provider stays memoised until restart.
+        resetProviderCache();
+      }
+    }
+
+    if (action === 'STT') {
+      const choice = await safeSelect({
+        message: 'Select the speech-to-text engine:',
+        choices: engineChoices(describeSttEngines(config))
+      });
+      if (choice && choice !== 'CANCEL') {
+        updateConfig({ sttEngine: choice });
+        resetTranscriberCache();
+      }
+    }
+
+    if (action === 'TTS') {
+      const choice = await safeSelect({
+        message: 'Select the voice engine:',
+        choices: engineChoices(describeTtsEngines(config))
+      });
+      if (choice && choice !== 'CANCEL') {
+        updateConfig({ ttsEngine: choice });
+        resetTtsCache();
+      }
+    }
+
     if (action === 'RESET') {
       const confirm = await safeConfirm({
         message: 'Are you sure you want to reset all preferences to default values?',
@@ -145,6 +218,9 @@ export async function runSettings() {
       });
       if (confirm) {
         resetConfig();
+        resetProviderCache();
+        resetTranscriberCache();
+        resetTtsCache();
       }
     }
   }

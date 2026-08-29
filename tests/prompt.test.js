@@ -1,4 +1,4 @@
-import { test, describe, beforeEach, afterEach } from 'node:test';
+import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { safeInput, safeSelect, safeConfirm, setInputSource, resetInputSource } from '../src/ui/prompt.js';
 import { createScriptedInput } from '../src/ui/scripted-input.js';
