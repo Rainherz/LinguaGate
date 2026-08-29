@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import { loadConfig, updateConfig, resetConfig } from '../services/config.js';
 import { renderTerminalHeatmap, formatDailyGoalBar } from '../ui/activity-view.js';
+import { renderProgressReport } from '../ui/progress-view.js';
 import { clearScreen, printAppHeader } from '../ui/display.js';
 import { safeSelect, safeInput, safeConfirm } from '../ui/prompt.js';
 import {
@@ -72,6 +73,7 @@ export async function runSettings() {
       choices: [
         { name: '🔙 Back to Main Menu (or press Esc)', value: 'BACK' },
         { name: '📅 View 30-Day Activity Heatmap', value: 'HEATMAP' },
+        { name: '📈 View Accuracy by Mode', value: 'PROGRESS' },
         { name: `🎯 Change Daily XP Goal (${config.dailyGoalXp} XP)`, value: 'GOAL' },
         { name: `🔊 Change Default Audio Speed (${config.audioSpeed})`, value: 'SPEED' },
         { name: `🎧 Change Audio Engine / Mute (${config.audioPlayer})`, value: 'ENGINE' },
@@ -175,6 +177,21 @@ export async function runSettings() {
       if (newName && newName.trim()) {
         updateConfig({ userName: newName.trim() });
       }
+    }
+
+    if (action === 'PROGRESS') {
+      clearScreen();
+      printAppHeader('Accuracy by Mode');
+      console.log(
+        boxen(renderProgressReport(), {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'round',
+          borderColor: 'green',
+          dimBorder: true
+        })
+      );
+      await safeConfirm({ message: 'Return to Settings?', default: true });
     }
 
     if (action === 'AI') {

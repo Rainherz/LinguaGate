@@ -36,7 +36,7 @@ describe('Settings mode', () => {
     await runSettings();
 
     const values = scripted.calls[0].config.choices.map((c) => c.value);
-    for (const surface of ['AI', 'STT', 'TTS']) {
+    for (const surface of ['AI', 'STT', 'TTS', 'PROGRESS']) {
       assert.ok(values.includes(surface), `settings must expose ${surface}, got ${values}`);
     }
   });
@@ -94,5 +94,15 @@ describe('Settings mode', () => {
     assert.strictEqual(config.ttsEngine, DEFAULT_CONFIG.ttsEngine);
     assert.strictEqual(config.aiProvider, DEFAULT_CONFIG.aiProvider);
     assert.strictEqual(config.sttEngine, DEFAULT_CONFIG.sttEngine);
+  });
+
+  test('the accuracy report is reachable and renders without sessions', async () => {
+    const scripted = createScriptedInput(['PROGRESS', true, 'BACK']);
+    setInputSource(scripted);
+
+    await runSettings();
+
+    const shown = scripted.calls.find((c) => c.config.message === 'Return to Settings?');
+    assert.ok(shown, 'the report screen should have been displayed');
   });
 });
