@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { safeSelect, safeConfirm } from './ui/prompt.js';
 import { getWordOfDay } from './services/tutor.js';
 import { loadHistory, recordSession } from './services/history.js';
+import { getWeakSpots } from './services/weakspots.js';
 import { loadProgress } from './services/progress.js';
 import { loadConfig, getGreeting } from './services/config.js';
 import { formatDailyGoalBar } from './services/activity.js';
@@ -94,7 +95,23 @@ async function main() {
       `  🏆 Streak: ${history.bestStreak} | ⚡ XP: ${progress.xp} | 🎓 Lessons: ${progress.completedLessons.length} | 🧠 Due Cards: ${srsDueCount}`
     )
   );
-  console.log(`  ${formatDailyGoalBar(config.dailyGoalXp)}\n`);
+  console.log(`  ${formatDailyGoalBar(config.dailyGoalXp)}`);
+
+  // Analytics you have to navigate to don't get read; this is the one place
+  // every session passes through.
+  const weakSpots = getWeakSpots(3);
+  if (weakSpots.length > 0) {
+    console.log(`\n  ${chalk.bold.white('🩹 Your weak spots')} ${chalk.dim('(what to practice today)')}`);
+    for (const spot of weakSpots) {
+      const badge = spot.kind === 'pronunciation' ? chalk.magenta('🎙️') : chalk.cyan('📖');
+      const times = chalk.dim(`×${spot.count}`);
+      const trailing = spot.lastAttempt
+        ? chalk.dim(`  came out as "${spot.lastAttempt}"`)
+        : '';
+      console.log(`    ${badge}  ${chalk.white(spot.label)} ${times}${trailing}`);
+    }
+  }
+  console.log();
 
   let playAgain = true;
   while (playAgain) {

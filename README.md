@@ -8,7 +8,7 @@
 [![pnpm Version](https://img.shields.io/badge/pnpm-%3E%3D11.0.0-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io)
 [![CEFR Level](https://img.shields.io/badge/CEFR-A1%20%E2%9E%94%20C1-blue?style=flat-square)](https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)
 [![Algorithm](https://img.shields.io/badge/SRS-SuperMemo%20SM--2-orange?style=flat-square)](https://en.wikipedia.org/wiki/SuperMemo)
-[![Tests](https://img.shields.io/badge/Tests-163%2F163%20Passing-brightgreen?style=flat-square)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-175%2F175%20Passing-brightgreen?style=flat-square)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 *Master real-world English directly from your terminal. Built for developers preparing for international remote jobs in USD.*
@@ -45,8 +45,9 @@ flowchart LR
 2. **Speaking Lab with Local Speech-to-Text**: Real microphone capture transcribed on your own machine by whisper.cpp — measured WPM, word-level precision against the target, filler detection, and an articulation diagnosis that crosses per-word acoustic confidence with the target diff to separate confident substitutions from mumbling. The AI examiner is fed that evidence and constrained to it.
 3. **Personalized Tech Mock Interview Simulator**: Tailor-made 4-round technical interviews for your exact role, tech stack, and seniority with official Hiring Committee verdicts.
 4. **SuperMemo SM-2 Spaced Repetition**: Mistakes are automatically converted into targeted flashcards with dynamic retention intervals (`1d ➔ 3d ➔ 7d ➔ 30d`) — grammar rules *and* individual mispronounced phrases, each on its own schedule.
-5. **30-Day Activity Heatmap & Daily Goals**: Track daily XP progress with GitHub-style ANSI terminal heatmaps.
-6. **Offline First & Atomic Storage**: Local JSON database with automatic `.bak` snapshotting and instant recovery.
+5. **Weak Spots on the Home Screen**: The three things you are measurably worst at, ranked by error frequency *discounted by SM-2 mastery* — so a rule you have since cleared stops crowding out what you are actually failing today.
+6. **30-Day Activity Heatmap & Daily Goals**: Track daily XP progress with GitHub-style ANSI terminal heatmaps.
+7. **Offline First & Atomic Storage**: Local JSON database with automatic `.bak` snapshotting and instant recovery.
 
 ---
 
@@ -207,6 +208,21 @@ Every measured substitution span is filed as its own SM-2 card, carrying the tar
 ```
 
 Reviewing one does **not** ask you to type it — that would prove nothing about pronunciation. It replays the native model, records you again, transcribes, and only advances the interval when the diff comes back clean. The measurement that created the card is the measurement that clears it.
+
+---
+
+## 🩹 Weak Spots
+
+Every session opens with the three things you are measurably worst at:
+
+```text
+  🩹 Your weak spots (what to practice today)
+    🎙️  prioritize     ×2  came out as "priority ties"
+    🎙️  schedule       ×1  came out as "es-schedule"
+    📖  third_person_s ×3  came out as "it need"
+```
+
+Note the ordering: `third_person_s` has the **highest** raw error count and ranks **last**. Raw counts are a museum — a rule you fumbled repeatedly last month sits at the top forever even after you have mastered it. Each entry is weighted by `1 / (1 + repetition)`, using the SM-2 repetition streak as the app's own measure of consolidation. Mastered items are demoted but never vanish, because a cleared rule can always resurface.
 
 ---
 
@@ -377,6 +393,7 @@ src/
 │   ├── speech.js         # WPM, word diff, articulation diagnosis & AI evaluator
 │   ├── transcriber.js    # Local STT + per-word acoustic confidence
 │   ├── stats.js          # In-memory session telemetry
+│   ├── weakspots.js      # Mastery-weighted ranking of recurring mistakes
 │   ├── storage.js        # Atomic JSON persistence with .bak auto-recovery
 │   ├── verbs.js          # Irregular verbs pattern engine
 │   └── vocabulary.js     # Word of the Day persistence & quiz generator
