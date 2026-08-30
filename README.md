@@ -8,7 +8,7 @@
 [![pnpm Version](https://img.shields.io/badge/pnpm-%3E%3D11.0.0-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io)
 [![CEFR Level](https://img.shields.io/badge/CEFR-A1%20%E2%9E%94%20C1-blue?style=flat-square)](https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)
 [![Algorithm](https://img.shields.io/badge/SRS-SuperMemo%20SM--2-orange?style=flat-square)](https://en.wikipedia.org/wiki/SuperMemo)
-[![Tests](https://img.shields.io/badge/Tests-333%2F333%20Passing-brightgreen?style=flat-square)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-348%2F348%20Passing-brightgreen?style=flat-square)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 *Master real-world English directly from your terminal. Built for developers preparing for international remote jobs in USD.*
@@ -253,7 +253,9 @@ espeak-ng  ultra-slow  21ms   4.93s clip
 google     normal     833ms   (network round trip per phrase)
 ```
 
-Only the engines your platform can actually run are offered. macOS and Windows both ship a usable voice, so audio works out of the box there; Linux falls back to the network unless you install one. Set `ttsEngine` in Settings, or `off` for silence. For the best offline voice on any platform:
+Only the engines your platform can actually run are offered — and only those whose audio your installed player can actually play. That second filter matters: PowerShell's built-in player handles WAV only, `aplay` WAV only and `mpg123` MP3 only, so on a bare Windows box the network engine renders an MP3 nothing can open. Quality decides the order; playability decides eligibility.
+
+macOS and Windows both ship a usable voice, so reference audio works out of the box there. Linux needs an installed engine or the network. Set `ttsEngine` in Settings, or `off` for silence. For the best offline voice on any platform:
 
 ```bash
 pip install piper-tts
@@ -433,7 +435,7 @@ src/
 │   ├── transcriber.js    # Local STT + per-word acoustic confidence
 │   ├── tts.js            # Speech synthesis port (piper / google / espeak-ng)
 │   ├── engine-status.js  # What each engine surface resolves to, and why
-│   ├── platform.js       # Per-OS binaries, players, voices & model locations
+│   ├── platform.js       # Per-OS binaries, players, formats, voices & models
 │   ├── stats.js          # In-memory session telemetry
 │   ├── weakspots.js      # Mastery-weighted ranking of recurring mistakes
 │   ├── progress-report.js # Per-mode accuracy and trend from the session log

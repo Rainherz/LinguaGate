@@ -5,7 +5,9 @@ import {
   hasBinary,
   audioPlayersFor,
   ttsEnginesFor,
-  modelSearchDirs
+  modelSearchDirs,
+  playableFormats,
+  ENGINE_FORMATS
 } from '../src/services/platform.js';
 
 describe('Platform capabilities', () => {
@@ -118,6 +120,69 @@ describe('Platform capabilities', () => {
     test('Linux keeps the shared system locations', () => {
       const dirs = modelSearchDirs('whisper', 'linux');
       assert.ok(dirs.some((d) => d.startsWith('/usr')));
+    });
+  });
+
+  describe('playback formats', () => {
+    test('every player declares which formats it can actually play', () => {
+      for (const platform of ['linux', 'darwin', 'win32']) {
+        for (const player of audioPlayersFor(platform)) {
+          assert.ok(Array.isArray(player.formats) && player.formats.length > 0,
+            `${player.cmd} on ${platform} must declare formats`);
+        }
+      }
+    });
+
+    test('the built-in Windows player is WAV only', () => {
+      const ps = audioPlayersFor('win32').find((p) => p.cmd === 'powershell');
+      assert.deepStrictEqual(ps.formats, ['wav']);
+    });
+
+    test('aplay is WAV only and mpg123 is MP3 only', () => {
+      const linux = audioPlayersFor('linux');
+      assert.deepStrictEqual(linux.find((p) => p.cmd === 'aplay').formats, ['wav']);
+      assert.deepStrictEqual(linux.find((p) => p.cmd === 'mpg123').formats, ['mp3']);
+    });
+
+    test('ffplay and afplay handle everything the engines produce', () => {
+      const ffplay = audioPlayersFor('linux').find((p) => p.cmd === 'ffplay');
+      for (const format of Object.values(ENGINE_FORMATS)) {
+        assert.ok(ffplay.formats.includes(format), `ffplay should play .${format}`);
+      }
+    });
+
+    test('every synthesis engine declares its output format', () => {
+      for (const engine of ['piper', 'google', 'say', 'sapi', 'espeak-ng']) {
+        assert.ok(ENGINE_FORMATS[engine], `${engine} must declare an output format`);
+      }
+      assert.strictEqual(ENGINE_FORMATS.google, 'mp3');
+      assert.strictEqual(ENGINE_FORMATS.sapi, 'wav');
+    });
+
+    test('playableFormats reports what the available players can handle', () => {
+      const formats = playableFormats();
+      assert.ok(Array.isArray(formats));
+      // No player installed means nothing is playable, which is a valid answer.
+      for (const f of formats) assert.ok(typeof f === 'string');
+    });
+
+    test('a WAV-only player makes MP3 unplayable', () => {
+      const formats = playableFormats('win32', (cmd) => cmd === 'powershell');
+      assert.deepStrictEqual(formats, ['wav']);
+    });
+
+    test('an MP3-only player makes WAV unplayable', () => {
+      const formats = playableFormats('linux', (cmd) => cmd === 'mpg123');
+      assert.deepStrictEqual(formats, ['mp3']);
+    });
+
+    test('with ffplay present everything is playable', () => {
+      const formats = playableFormats('linux', (cmd) => cmd === 'ffplay');
+      assert.ok(formats.includes('wav') && formats.includes('mp3'));
+    });
+
+    test('no player at all yields nothing playable', () => {
+      assert.deepStrictEqual(playableFormats('linux', () => false), []);
     });
   });
 });

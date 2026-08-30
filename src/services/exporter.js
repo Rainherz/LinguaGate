@@ -6,11 +6,23 @@ import { loadProgress } from './progress.js';
 import { loadVerbs } from './verbs.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const EXPORT_DIR = join(__dirname, '../../export');
+/**
+ * Where decks are written.
+ *
+ * Derived from the data-dir override so a test can isolate it. As a fixed repo
+ * path this was the one service that ignored LINGUAGATE_DATA_DIR, which made
+ * two export test files clobber the same file when the runner ran them in
+ * parallel.
+ */
+function getExportDir() {
+  return process.env.LINGUAGATE_DATA_DIR
+    ? join(process.env.LINGUAGATE_DATA_DIR, 'export')
+    : join(__dirname, '../../export');
+}
 
 function ensureExportDir() {
-  if (!existsSync(EXPORT_DIR)) {
-    mkdirSync(EXPORT_DIR, { recursive: true });
+  if (!existsSync(getExportDir())) {
+    mkdirSync(getExportDir(), { recursive: true });
   }
 }
 
@@ -83,7 +95,7 @@ export function exportToAnkiCsv() {
     csvContent += `"${escapeCsv(front)}","${escapeCsv(back)}","${tags}"\n`;
   }
 
-  const filePath = join(EXPORT_DIR, 'anki_deck.csv');
+  const filePath = join(getExportDir(), 'anki_deck.csv');
   writeFileSync(filePath, csvContent, 'utf-8');
   return { filePath, count: srsCards.length + verbs.length };
 }
@@ -127,7 +139,7 @@ export function exportToMarkdownNotebook() {
     md += `| ${v.level} | **${v.infinitive}** | ${v.past} | ${v.participle} | ${v.spanish} | \`${v.pattern}\` |\n`;
   });
 
-  const filePath = join(EXPORT_DIR, 'my_grammar_notebook.md');
+  const filePath = join(getExportDir(), 'my_grammar_notebook.md');
   writeFileSync(filePath, md, 'utf-8');
   return { filePath };
 }

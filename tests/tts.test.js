@@ -8,6 +8,7 @@ import {
   buildSapiScript,
   cacheKeyFor,
   detectTtsEngine,
+  isEnginePlayable,
   listTtsEngines,
   resetTtsCache,
   synthesize
@@ -185,6 +186,35 @@ describe('Text-to-Speech port', () => {
           assert.ok(rateOf(s) >= -10 && rateOf(s) <= 10);
         }
       });
+    });
+  });
+
+  describe('playability gating', () => {
+    test('an engine whose format nothing can play is not usable', () => {
+      // Bare Windows: PowerShell is WAV-only, so Google's MP3 is unplayable.
+      assert.strictEqual(isEnginePlayable('google', ['wav']), false);
+      assert.strictEqual(isEnginePlayable('sapi', ['wav']), true);
+    });
+
+    test('an MP3-only player rules out the WAV engines', () => {
+      assert.strictEqual(isEnginePlayable('espeak-ng', ['mp3']), false);
+      assert.strictEqual(isEnginePlayable('google', ['mp3']), true);
+    });
+
+    test('with every format playable, nothing is ruled out', () => {
+      for (const engine of ['piper', 'google', 'say', 'sapi', 'espeak-ng']) {
+        assert.strictEqual(isEnginePlayable(engine, ['wav', 'mp3', 'aiff']), true);
+      }
+    });
+
+    test('with no player at all, gating is skipped rather than silencing everything', () => {
+      // Rendering can still be useful (caching, export); refusing to pick any
+      // engine because no player is installed would be its own failure.
+      assert.strictEqual(isEnginePlayable('google', []), true);
+    });
+
+    test('an unknown engine is never gated out', () => {
+      assert.strictEqual(isEnginePlayable('mystery', ['wav']), true);
     });
   });
 });

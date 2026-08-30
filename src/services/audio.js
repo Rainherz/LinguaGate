@@ -33,7 +33,7 @@ function detectPlayer() {
  * Builds the shell command for a player.
  * Most players take the file as a trailing argument; the Windows fallback needs
  * a PowerShell one-liner instead, so the shape cannot be shared.
- * @param {{ type: string, cmd: string, args: string }} player
+ * @param {{ type: string, cmd: string, args: string, formats?: string[] }} player
  * @param {string} args
  * @param {string} filePath
  * @returns {string}

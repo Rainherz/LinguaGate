@@ -18,7 +18,8 @@ import {
   hasBinary,
   audioPlayersFor,
   ttsEnginesFor,
-  modelSearchDirs
+  modelSearchDirs,
+  playableFormats
 } from '../src/services/platform.js';
 import { detectRecorderDriver } from '../src/services/recorder.js';
 import { detectTtsEngine, synthesize, resetTtsCache } from '../src/services/tts.js';
@@ -69,6 +70,7 @@ if (usablePlayer) {
 }
 
 heading('4. Speech synthesis');
+info('formats this machine can play', playableFormats().join(', ') || 'none');
 resetTtsCache();
 info('engines for this platform', ttsEnginesFor().join(' -> '));
 const engine = detectTtsEngine({ ttsEngine: 'auto' });
@@ -119,7 +121,12 @@ for (const type of ttsEnginesFor()) {
 
 heading('5. Microphone');
 const driver = detectRecorderDriver();
-check('a recorder driver resolves', Boolean(driver), driver ?? 'none — install ffmpeg');
+if (driver) {
+  check('a recorder driver resolves', true, driver);
+} else {
+  // Recording is optional: the app falls back to a typed simulation and says so.
+  console.log(`${WARN} no recorder — install ffmpeg to speak instead of typing (not a platform failure)`);
+}
 
 heading('6. Speech-to-text');
 resetTranscriberCache();

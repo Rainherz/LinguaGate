@@ -1,6 +1,7 @@
 import { resolveProviderName } from './ai/index.js';
 import { detectTranscriberEngine } from './transcriber.js';
-import { detectTtsEngine, listTtsEngines } from './tts.js';
+import { detectTtsEngine, listTtsEngines, isEnginePlayable } from './tts.js';
+import { playableFormats, ENGINE_FORMATS } from './platform.js';
 
 /**
  * Describes which engines exist, which are usable, and which one the current
@@ -112,8 +113,22 @@ export function describeTtsEngines(config = {}) {
 
   // Only the engines this platform can actually run are offered; listing
   // macOS say on Linux would be noise, not a discoverable capability.
+  const formats = playableFormats();
   const engineOptions = listTtsEngines().map((type) => {
     const probe = type === 'google' ? { type } : detectTtsEngine({ ...config, ttsEngine: type });
+    const playable = isEnginePlayable(type, formats);
+
+    // An engine that renders a format no installed player understands is
+    // reported as unusable with the reason, not silently ranked and ignored.
+    if (probe && !playable) {
+      return option(
+        type,
+        LABELS[type] || type,
+        false,
+        `Renders .${ENGINE_FORMATS[type]}, which no installed player can play — install ffmpeg`
+      );
+    }
+
     return option(type, LABELS[type] || type, Boolean(probe), DETAILS[type]?.(probe) ?? '');
   });
 

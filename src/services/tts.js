@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { getDataDir } from './storage.js';
 import { loadConfig } from './config.js';
-import { hasBinary, modelSearchDirs, ttsEnginesFor } from './platform.js';
+import { hasBinary, modelSearchDirs, ttsEnginesFor, playableFormats, ENGINE_FORMATS } from './platform.js';
 
 const SYNTH_TIMEOUT_MS = 60_000;
 const DEFAULT_VOICE = 'en-us';
@@ -171,8 +171,26 @@ function buildEngine(type, cfg) {
 }
 
 /**
- * Picks the synthesis engine. Explicit config wins; otherwise the first
- * available engine in quality order.
+ * Whether audio from this engine can be played back here.
+ *
+ * Voice quality decides the ORDER; this decides eligibility. A better-sounding
+ * engine that renders a format no installed player understands is worse than a
+ * plainer one that can actually be heard — on a bare Windows box that was the
+ * difference between a reference voice and silence.
+ * @param {string} engineType
+ * @param {string[]} formats formats the machine can play; empty means unknown
+ * @returns {boolean}
+ */
+export function isEnginePlayable(engineType, formats) {
+  if (!formats || formats.length === 0) return true;
+  const produced = ENGINE_FORMATS[engineType];
+  if (!produced) return true;
+  return formats.includes(produced);
+}
+
+/**
+ * Picks the synthesis engine. Explicit config wins; otherwise the best-sounding
+ * engine whose output this machine can actually play.
  * @param {{ ttsEngine?: string, ttsVoice?: string, ttsModel?: string }} [config]
  */
 export function detectTtsEngine(config) {
@@ -185,7 +203,9 @@ export function detectTtsEngine(config) {
   if (cfg.ttsEngine && cfg.ttsEngine !== 'auto') {
     resolved = buildEngine(cfg.ttsEngine, cfg);
   } else {
+    const formats = playableFormats();
     for (const type of ttsEnginesFor()) {
+      if (!isEnginePlayable(type, formats)) continue;
       resolved = buildEngine(type, cfg);
       if (resolved) break;
     }
