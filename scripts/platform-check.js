@@ -22,7 +22,7 @@ import {
   playableFormats
 } from '../src/services/platform.js';
 import { detectRecorderDriver } from '../src/services/recorder.js';
-import { detectTtsEngine, synthesize, resetTtsCache } from '../src/services/tts.js';
+import { detectTtsEngine, synthesize, resetTtsCache, isEnginePlayable } from '../src/services/tts.js';
 import { detectTranscriberEngine, resetTranscriberCache } from '../src/services/transcriber.js';
 import { playbackCommand } from '../src/services/audio.js';
 
@@ -76,19 +76,27 @@ info('engines for this platform', ttsEnginesFor().join(' -> '));
 const engine = detectTtsEngine({ ttsEngine: 'auto' });
 check('an engine resolves', Boolean(engine), engine?.type ?? 'none');
 
+const formats = playableFormats();
 for (const type of ttsEnginesFor()) {
   resetTtsCache();
   const probe = detectTtsEngine({ ttsEngine: type });
-  info(`${type.padEnd(12)} ${probe ? 'available' : 'unavailable'}`);
+  const eligible = isEnginePlayable(type, formats);
+  const state = !probe
+    ? 'unavailable'
+    : eligible
+      ? 'available'
+      : 'installed but its format cannot be played here';
+  info(`${type.padEnd(12)} ${state}`);
 }
 
 const PHRASE = 'I want to schedule a technical meeting.';
-// Google is included deliberately: it renders MP3 while the local engines
-// render WAV, and a player that only handles one of them is a platform
-// problem, not a network one. PowerShell's Media.SoundPlayer is WAV-only.
+// Every available engine is rendered and played, including the ones the app
+// would rule out — but a format the app already excluded failing to play is
+// the exclusion working, not a defect, so it is not counted as a failure.
 for (const type of ttsEnginesFor()) {
   resetTtsCache();
   if (!detectTtsEngine({ ttsEngine: type })) continue;
+  const eligibleHere = isEnginePlayable(type, formats);
 
   const started = Date.now();
   const result = await synthesize(PHRASE, { speed: 'normal', config: { ttsEngine: type, ttsVoice: 'en-us' } });
@@ -109,11 +117,15 @@ for (const type of ttsEnginesFor()) {
       check(`${type} audio plays through ${usablePlayer.cmd}`, true);
     } catch (err) {
       const format = result.path.split('.').pop();
-      check(
-        `${type} audio plays through ${usablePlayer.cmd}`,
-        false,
-        `${err.message.split('\n')[0]} (format: .${format})`
-      );
+      if (eligibleHere) {
+        check(`${type} audio plays through ${usablePlayer.cmd}`, false,
+          `${err.message.split('\n')[0]} (format: .${format})`);
+      } else {
+        console.log(
+          `${INFO} ${type} could not play (.${format}) — expected, and why the app ` +
+          `does not choose it here`
+        );
+      }
     }
   }
   rmSync(result.path, { force: true });
@@ -143,7 +155,8 @@ for (const dir of modelSearchDirs('whisper')) {
 
 heading('Result');
 if (failures === 0) {
-  console.log('  Everything the platform layer promises on this machine holds.\n');
+  console.log('  Everything the platform layer promises on this machine holds.');
+  console.log(`  Reference audio will come from: ${engine?.type ?? 'nothing — no engine available'}.\n`);
 } else {
   console.log(`  ${failures} check(s) failed — paste this output to get them fixed.\n`);
 }
