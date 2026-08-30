@@ -1,4 +1,4 @@
-import { resolveProviderName } from './ai/index.js';
+import { resolveProviderName, isProviderAvailable } from './ai/index.js';
 import { detectTranscriberEngine } from './transcriber.js';
 import { detectTtsEngine, listTtsEngines, isEnginePlayable } from './tts.js';
 import { playableFormats, ENGINE_FORMATS } from './platform.js';
@@ -36,7 +36,14 @@ export function describeAiProviders(config = {}, env = process.env) {
     resolved,
     options: [
       option('auto', 'Auto-detect', true, 'Direct API when a credential exists, otherwise the CLI'),
-      option('agy', 'agy CLI', true, 'Agent harness — heavier per request, no API key needed'),
+      option(
+        'agy',
+        'agy CLI',
+        isProviderAvailable('agy', env),
+        isProviderAvailable('agy', env)
+          ? 'Agent harness — heavier per request, no API key needed'
+          : 'Not installed — install the agy CLI to use it'
+      ),
       option(
         'anthropic',
         'Claude API (direct)',

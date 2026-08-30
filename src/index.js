@@ -5,6 +5,7 @@ import { safeSelect, safeConfirm } from './ui/prompt.js';
 import { getWordOfDay } from './services/tutor.js';
 import { loadHistory, recordSession } from './services/history.js';
 import { getWeakSpots } from './services/weakspots.js';
+import { describeProviderGap } from './services/ai/index.js';
 import { loadProgress } from './services/progress.js';
 import { loadConfig, getGreeting } from './services/config.js';
 import { formatDailyGoalBar } from './ui/activity-view.js';
@@ -99,6 +100,15 @@ async function main() {
 
   // Analytics you have to navigate to don't get read; this is the one place
   // every session passes through.
+  // Every mode needs a provider to generate an exercise, so a missing one is
+  // said once here rather than surfacing as a spawn error mid-lesson.
+  const providerGap = describeProviderGap(config);
+  if (providerGap) {
+    console.log(
+      `\n  ${chalk.bold.yellow('⚠ No AI provider')}\n  ${chalk.yellow(providerGap)}`
+    );
+  }
+
   const weakSpots = getWeakSpots(3);
   if (weakSpots.length > 0) {
     console.log(`\n  ${chalk.bold.white('🩹 Your weak spots')} ${chalk.dim('(what to practice today)')}`);

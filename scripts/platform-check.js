@@ -25,6 +25,8 @@ import { detectRecorderDriver } from '../src/services/recorder.js';
 import { detectTtsEngine, synthesize, resetTtsCache, isEnginePlayable } from '../src/services/tts.js';
 import { detectTranscriberEngine, resetTranscriberCache } from '../src/services/transcriber.js';
 import { playbackCommand } from '../src/services/audio.js';
+import { resolveProviderName, resetProviderCache } from '../src/services/ai/index.js';
+import { checkGrammar } from '../src/services/tutor.js';
 
 const PASS = '  [ OK ]';
 const FAIL = '  [FAIL]';
@@ -131,7 +133,28 @@ for (const type of ttsEnginesFor()) {
   rmSync(result.path, { force: true });
 }
 
-heading('5. Microphone');
+heading('5. AI provider');
+resetProviderCache();
+const provider = resolveProviderName({ aiProvider: 'auto' }, process.env);
+info('auto resolves to', provider);
+info('ANTHROPIC_API_KEY', process.env.ANTHROPIC_API_KEY ? 'set' : 'not set');
+info('agy CLI', hasBinary('agy') ? 'present' : 'not found');
+
+// This is the one capability the app cannot degrade around: without a provider
+// no mode can generate an exercise at all.
+try {
+  const started = Date.now();
+  const result = await checkGrammar('He go to the store yesterday.');
+  const ms = Date.now() - started;
+  check('the provider answers a real request', result?.isCorrect === false,
+    `${provider} replied in ${ms}ms with ${result?.corrections?.length ?? 0} correction(s)`);
+} catch (err) {
+  check('the provider answers a real request', false,
+    `${provider}: ${err.message.split('\n')[0]}`);
+  console.log(`${WARN} without a working provider no exercise can be generated — this is not optional`);
+}
+
+heading('6. Microphone');
 const driver = detectRecorderDriver();
 if (driver) {
   check('a recorder driver resolves', true, driver);
@@ -140,7 +163,7 @@ if (driver) {
   console.log(`${WARN} no recorder — install ffmpeg to speak instead of typing (not a platform failure)`);
 }
 
-heading('6. Speech-to-text');
+heading('7. Speech-to-text');
 resetTranscriberCache();
 const stt = detectTranscriberEngine({ sttEngine: 'auto' });
 if (stt) {
