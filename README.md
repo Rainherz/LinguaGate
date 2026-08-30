@@ -8,7 +8,7 @@
 [![pnpm Version](https://img.shields.io/badge/pnpm-%3E%3D11.0.0-F69220?style=flat-square&logo=pnpm&logoColor=white)](https://pnpm.io)
 [![CEFR Level](https://img.shields.io/badge/CEFR-A1%20%E2%9E%94%20C1-blue?style=flat-square)](https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)
 [![Algorithm](https://img.shields.io/badge/SRS-SuperMemo%20SM--2-orange?style=flat-square)](https://en.wikipedia.org/wiki/SuperMemo)
-[![Tests](https://img.shields.io/badge/Tests-310%2F310%20Passing-brightgreen?style=flat-square)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-333%2F333%20Passing-brightgreen?style=flat-square)](tests/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 *Master real-world English directly from your terminal. Built for developers preparing for international remote jobs in USD.*
@@ -185,16 +185,20 @@ So *which* words you fumbled, and *whether you fumbled them confidently or by mu
 
 ### Enabling measured mode
 
-```bash
-# Arch / CachyOS
-sudo pacman -S whisper-cpp
+| Platform | Install | Model directory |
+| :--- | :--- | :--- |
+| Arch / CachyOS | `sudo pacman -S whisper-cpp` | `~/.local/share/whisper` |
+| macOS | `brew install whisper-cpp` | `~/Library/Application Support/whisper` |
+| Windows | [release binaries](https://github.com/ggerganov/whisper.cpp/releases) on `PATH` | `%LOCALAPPDATA%\whisper` |
+| Any | `pip install openai-whisper` | — |
 
-# Then fetch a model into a directory LinguaGate searches:
-mkdir -p ~/.local/share/whisper && cd ~/.local/share/whisper
+Then fetch a model into the directory for your platform:
+
+```bash
 curl -LO https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
 ```
 
-LinguaGate auto-detects the binary and model. Override with `sttEngine` / `sttModel` in your config, or set `sttEngine: "off"` to stay in self-reported mode.
+LinguaGate auto-detects the binary and model. Override with `sttEngine` / `sttModel` in Settings, or set it to `off` to stay in self-reported mode.
 
 ### Mispronunciations become flashcards
 
@@ -230,11 +234,13 @@ Note the ordering: `third_person_s` has the **highest** raw error count and rank
 
 Reference audio comes from a swappable engine, chosen by **output quality** rather than by what happens to be installed:
 
-| Engine | Voice | Network | Speed control |
-| :--- | :--- | :---: | :--- |
-| `piper` | neural, natural | no | native |
-| `google` | natural | **yes** | playback time-stretch |
-| `espeak-ng` | formant, robotic | no | native |
+| Engine | Voice | Network | Platforms | Ships with the OS |
+| :--- | :--- | :---: | :--- | :---: |
+| `piper` | neural, natural | no | all | no |
+| `say` | natural | no | macOS | **yes** |
+| `google` | natural | **yes** | all | — |
+| `sapi` | synthetic | no | Windows | **yes** |
+| `espeak-ng` | formant, robotic | no | all | no |
 
 The ordering is deliberate. This app is used for **shadowing** — you imitate the reference voice — so ranking an audibly robotic engine above a natural-sounding one would teach the wrong prosody. `espeak-ng` is a fallback for when nothing better exists, not a preference.
 
@@ -247,7 +253,7 @@ espeak-ng  ultra-slow  21ms   4.93s clip
 google     normal     833ms   (network round trip per phrase)
 ```
 
-Set `ttsEngine` to `auto`, `piper`, `google`, `espeak-ng`, or `off`. For the best offline voice:
+Only the engines your platform can actually run are offered. macOS and Windows both ship a usable voice, so audio works out of the box there; Linux falls back to the network unless you install one. Set `ttsEngine` in Settings, or `off` for silence. For the best offline voice on any platform:
 
 ```bash
 pip install piper-tts
@@ -427,6 +433,7 @@ src/
 │   ├── transcriber.js    # Local STT + per-word acoustic confidence
 │   ├── tts.js            # Speech synthesis port (piper / google / espeak-ng)
 │   ├── engine-status.js  # What each engine surface resolves to, and why
+│   ├── platform.js       # Per-OS binaries, players, voices & model locations
 │   ├── stats.js          # In-memory session telemetry
 │   ├── weakspots.js      # Mastery-weighted ranking of recurring mistakes
 │   ├── progress-report.js # Per-mode accuracy and trend from the session log

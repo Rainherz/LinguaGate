@@ -1,10 +1,10 @@
-import { spawn, execSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { getDataDir } from './storage.js';
 import { loadConfig } from './config.js';
+import { hasBinary, modelSearchDirs, ttsEnginesFor } from './platform.js';
 
 const SYNTH_TIMEOUT_MS = 60_000;
 const DEFAULT_VOICE = 'en-us';
@@ -17,34 +17,18 @@ const DEFAULT_VOICE = 'en-us';
  * natural-sounding engine would teach the wrong prosody. It is a fallback for
  * when nothing better exists, not a preference.
  */
-const ENGINE_ORDER = ['piper', 'google', 'espeak-ng'];
 
-const PIPER_MODEL_DIRS = [
-  join(homedir(), '.local/share/piper'),
-  join(homedir(), '.local/share/piper-voices'),
-  '/usr/share/piper-voices'
-];
 
 let cachedEngine;
 
 /** Selectable engine names, best output first. */
-export function listTtsEngines() {
-  return [...ENGINE_ORDER];
+export function listTtsEngines(platform) {
+  return ttsEnginesFor(platform);
 }
 
 /** Clears the memoised engine probe. */
 export function resetTtsCache() {
   cachedEngine = undefined;
-}
-
-function hasBinary(cmd) {
-  const probe = process.platform === 'win32' ? 'where' : 'which';
-  try {
-    execSync(`${probe} ${cmd}`, { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /**
@@ -98,11 +82,52 @@ export function cacheKeyFor(text, engine, speed, voice) {
     .digest('hex');
 }
 
+/**
+ * macOS `say`, which ships with the OS and sounds markedly better than any
+ * formant synthesiser.
+ * @param {string} text
+ * @param {string} outPath
+ * @param {{ voice?: string, wpm?: number }} options
+ * @returns {string[]}
+ */
+export function buildSayArgs(text, outPath, options = {}) {
+  const args = ['-r', String(options.wpm ?? 160), '-o', outPath];
+  if (options.voice && options.voice !== DEFAULT_VOICE) args.unshift('-v', options.voice);
+  else args.unshift('-v', 'Samantha');
+  args.push(text);
+  return args;
+}
+
+/**
+ * Windows SAPI via PowerShell. Rate is a -10..10 scale rather than words per
+ * minute, so the app's pace is mapped onto it.
+ * @param {string} text
+ * @param {string} outPath
+ * @param {{ wpm?: number }} options
+ * @returns {string}
+ */
+export function buildSapiScript(text, outPath, options = {}) {
+  const wpm = options.wpm ?? 160;
+  const rate = Math.max(-10, Math.min(10, Math.round((wpm - 160) / 12)));
+  const phrase = String(text).replace(/'/g, "''");
+  const file = String(outPath).replace(/'/g, "''");
+
+  return (
+    `Add-Type -AssemblyName System.Speech; ` +
+    `$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; ` +
+    `$s.Rate = ${rate}; ` +
+    `$s.SetOutputToWaveFile('${file}'); ` +
+    `$s.Speak('${phrase}'); ` +
+    `$s.Dispose()`
+  );
+}
+
+
 function findPiperModel(configured) {
   if (configured && existsSync(configured)) return configured;
   if (process.env.PIPER_MODEL && existsSync(process.env.PIPER_MODEL)) return process.env.PIPER_MODEL;
 
-  for (const dir of PIPER_MODEL_DIRS) {
+  for (const dir of modelSearchDirs('piper')) {
     if (!existsSync(dir)) continue;
     try {
       const found = readdirSync(dir).filter((f) => f.endsWith('.onnx')).sort();
@@ -124,6 +149,18 @@ function buildEngine(type, cfg) {
   if (type === 'espeak-ng') {
     const cmd = hasBinary('espeak-ng') ? 'espeak-ng' : hasBinary('espeak') ? 'espeak' : null;
     return cmd ? { type: 'espeak-ng', cmd, voice: cfg.ttsVoice || DEFAULT_VOICE } : null;
+  }
+
+  if (type === 'say') {
+    return hasBinary('say')
+      ? { type: 'say', cmd: 'say', voice: cfg.ttsVoice || DEFAULT_VOICE }
+      : null;
+  }
+
+  if (type === 'sapi') {
+    return hasBinary('powershell')
+      ? { type: 'sapi', cmd: 'powershell', voice: cfg.ttsVoice || DEFAULT_VOICE }
+      : null;
   }
 
   if (type === 'google') {
@@ -148,7 +185,7 @@ export function detectTtsEngine(config) {
   if (cfg.ttsEngine && cfg.ttsEngine !== 'auto') {
     resolved = buildEngine(cfg.ttsEngine, cfg);
   } else {
-    for (const type of ENGINE_ORDER) {
+    for (const type of ttsEnginesFor()) {
       resolved = buildEngine(type, cfg);
       if (resolved) break;
     }
@@ -224,7 +261,7 @@ export async function synthesize(text, options = {}) {
 
   const speed = options.speed || 'normal';
   const key = cacheKeyFor(phrase, engine.type, speed, engine.voice);
-  const extension = engine.type === 'google' ? 'mp3' : 'wav';
+  const extension = engine.type === 'google' ? 'mp3' : engine.type === 'say' ? 'aiff' : 'wav';
   const outPath = join(getCacheDir(), `${key}.${extension}`);
 
   if (existsSync(outPath)) {
@@ -240,6 +277,19 @@ export async function synthesize(text, options = {}) {
         buildEspeakArgs(phrase, outPath, { voice: engine.voice, wpm: speedToWpm(speed) })
       );
       if (!ok) return failure(stderr.trim() || 'espeak-ng failed.', engine.type);
+    } else if (engine.type === 'say') {
+      const { ok, stderr } = await run(
+        engine.cmd,
+        buildSayArgs(phrase, outPath, { voice: engine.voice, wpm: speedToWpm(speed) })
+      );
+      if (!ok) return failure(stderr.trim() || 'say failed.', engine.type);
+    } else if (engine.type === 'sapi') {
+      const { ok, stderr } = await run(engine.cmd, [
+        '-NoProfile',
+        '-Command',
+        buildSapiScript(phrase, outPath, { wpm: speedToWpm(speed) })
+      ]);
+      if (!ok) return failure(stderr.trim() || 'SAPI failed.', engine.type);
     } else if (engine.type === 'piper') {
       const { ok, stderr } = await run(engine.cmd, buildPiperArgs(engine.model, outPath), phrase);
       if (!ok) return failure(stderr.trim() || 'piper failed.', engine.type);

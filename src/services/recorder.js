@@ -1,6 +1,7 @@
-import { spawn, execSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { getDataDir } from './storage.js';
+import { hasBinary } from './platform.js';
 import { existsSync, mkdirSync } from 'node:fs';
 
 function getSpeechCacheDir() {
@@ -35,51 +36,26 @@ export function resetRecorderCache() {
  * Detects the best available audio recording driver on the system.
  * @returns {'ffmpeg-pulse' | 'ffmpeg-alsa' | 'ffmpeg-dshow' | 'ffmpeg-avfoundation' | 'arecord' | null}
  */
+/**
+ * The recorder for each platform, best first. ffmpeg covers all three with a
+ * different input driver; arecord is an ALSA-only Linux fallback.
+ * @type {Record<string, Array<{ binary: string, driver: 'ffmpeg-pulse' | 'ffmpeg-dshow' | 'ffmpeg-avfoundation' | 'arecord' }>>}
+ */
+const RECORDERS = {
+  linux: [
+    { binary: 'ffmpeg', driver: 'ffmpeg-pulse' },
+    { binary: 'arecord', driver: 'arecord' }
+  ],
+  win32: [{ binary: 'ffmpeg', driver: 'ffmpeg-dshow' }],
+  darwin: [{ binary: 'ffmpeg', driver: 'ffmpeg-avfoundation' }]
+};
+
 export function detectRecorderDriver() {
   if (cachedRecorder !== undefined) return cachedRecorder;
 
-  const platform = process.platform;
-
-  if (platform === 'linux') {
-    try {
-      execSync('which ffmpeg', { stdio: 'ignore' });
-      cachedRecorder = 'ffmpeg-pulse';
-      return cachedRecorder;
-    } catch {
-      try {
-        execSync('which arecord', { stdio: 'ignore' });
-        cachedRecorder = 'arecord';
-        return cachedRecorder;
-      } catch {
-        cachedRecorder = null;
-        return null;
-      }
-    }
-  }
-
-  if (platform === 'win32') {
-    try {
-      execSync('where ffmpeg', { stdio: 'ignore' });
-      cachedRecorder = 'ffmpeg-dshow';
-      return cachedRecorder;
-    } catch {
-      cachedRecorder = null;
-      return null;
-    }
-  }
-
-  if (platform === 'darwin') {
-    try {
-      execSync('which ffmpeg', { stdio: 'ignore' });
-      cachedRecorder = 'ffmpeg-avfoundation';
-      return cachedRecorder;
-    } catch {
-      cachedRecorder = null;
-      return null;
-    }
-  }
-
-  return null;
+  const candidates = RECORDERS[process.platform] || [];
+  cachedRecorder = candidates.find((c) => hasBinary(c.binary))?.driver ?? null;
+  return cachedRecorder;
 }
 
 /**

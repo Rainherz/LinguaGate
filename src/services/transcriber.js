@@ -1,8 +1,9 @@
-import { spawn, execSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, readdirSync } from 'node:fs';
 import { join, basename, extname } from 'node:path';
-import { tmpdir, homedir, cpus } from 'node:os';
+import { tmpdir, cpus } from 'node:os';
 import { loadConfig } from './config.js';
+import { hasBinary, modelSearchDirs } from './platform.js';
 
 const TRANSCRIBE_TIMEOUT_MS = 120_000;
 
@@ -54,30 +55,11 @@ export function isSilenceArtifact(text) {
 const WHISPER_CPP_BINARIES = ['whisper-cli', 'whisper-cpp'];
 const OPENAI_WHISPER_BINARY = 'whisper';
 
-const MODEL_SEARCH_DIRS = [
-  join(homedir(), '.local/share/whisper'),
-  join(homedir(), '.cache/whisper'),
-  join(homedir(), 'whisper.cpp/models'),
-  '/usr/share/whisper.cpp/models',
-  '/usr/share/whisper',
-  '/opt/whisper.cpp/models'
-];
-
 let cachedEngine;
 
 /** Clears the memoised engine probe. Intended for tests and settings changes. */
 export function resetTranscriberCache() {
   cachedEngine = undefined;
-}
-
-function hasBinary(cmd) {
-  const probe = process.platform === 'win32' ? 'where' : 'which';
-  try {
-    execSync(`${probe} ${cmd}`, { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /**
@@ -295,7 +277,7 @@ function findWhisperCppModel(configured) {
     return process.env.WHISPER_MODEL;
   }
 
-  for (const dir of MODEL_SEARCH_DIRS) {
+  for (const dir of modelSearchDirs('whisper')) {
     if (!existsSync(dir)) continue;
     try {
       const candidates = readdirSync(dir)

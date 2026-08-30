@@ -94,9 +94,25 @@ describe('Engine status', () => {
   });
 
   describe('describeTtsEngines', () => {
-    test('lists engines in quality order with auto and off around them', () => {
+    test('lists this platform engines in quality order, with auto and off around them', () => {
       const values = describeTtsEngines({ ttsEngine: 'auto' }).options.map((o) => o.value);
-      assert.deepStrictEqual(values, ['auto', 'piper', 'google', 'espeak-ng', 'off']);
+
+      assert.strictEqual(values[0], 'auto');
+      assert.strictEqual(values.at(-1), 'off');
+      assert.ok(values.includes('piper'));
+      assert.ok(values.includes('google'));
+      assert.ok(values.indexOf('piper') < values.indexOf('google'));
+    });
+
+    test('offers only engines this platform can run', () => {
+      const values = describeTtsEngines({ ttsEngine: 'auto' }).options.map((o) => o.value);
+      const native = { darwin: 'say', win32: 'sapi' }[process.platform];
+
+      for (const foreign of ['say', 'sapi']) {
+        if (foreign !== native) {
+          assert.ok(!values.includes(foreign), `${foreign} should not be offered here`);
+        }
+      }
     });
 
     test('google needs no local binary and is always available', () => {

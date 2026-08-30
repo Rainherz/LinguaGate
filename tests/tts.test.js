@@ -4,6 +4,8 @@ import {
   speedToWpm,
   buildEspeakArgs,
   buildPiperArgs,
+  buildSayArgs,
+  buildSapiScript,
   cacheKeyFor,
   detectTtsEngine,
   listTtsEngines,
@@ -136,6 +138,53 @@ describe('Text-to-Speech port', () => {
     test('empty text is refused without touching an engine', async () => {
       const result = await synthesize('   ', { config: { ttsEngine: 'espeak-ng' } });
       assert.strictEqual(result.success, false);
+    });
+  });
+
+  describe('platform-native engines', () => {
+    describe('buildSayArgs', () => {
+      test('wires voice, rate and output file for macOS say', () => {
+        const args = buildSayArgs('hello there', '/tmp/out.aiff', { voice: 'Samantha', wpm: 110 });
+
+        assert.strictEqual(args[args.indexOf('-v') + 1], 'Samantha');
+        assert.strictEqual(args[args.indexOf('-r') + 1], '110');
+        assert.strictEqual(args[args.indexOf('-o') + 1], '/tmp/out.aiff');
+        // The phrase is one argv entry — never interpolated into a shell.
+        assert.strictEqual(args[args.length - 1], 'hello there');
+      });
+
+      test('keeps a phrase containing quotes intact', () => {
+        const nasty = `it's "fine"; rm -rf /`;
+        assert.strictEqual(buildSayArgs(nasty, '/tmp/o.aiff', {}).at(-1), nasty);
+      });
+    });
+
+    describe('buildSapiScript', () => {
+      test('produces a PowerShell script that writes to the given file', () => {
+        const script = buildSapiScript('hello there', 'C:\\tmp\\out.wav', { wpm: 160 });
+
+        assert.match(script, /SpeechSynthesizer/);
+        assert.match(script, /SetOutputToWaveFile/);
+        assert.match(script, /hello there/);
+        assert.match(script, /C:\\tmp\\out\.wav/);
+      });
+
+      test('escapes single quotes so a phrase cannot break out of the string', () => {
+        const script = buildSapiScript("it's fine", 'C:\\o.wav', {});
+        assert.match(script, /it''s fine/);
+      });
+
+      test('maps the pace onto the SAPI rate range', () => {
+        const slow = buildSapiScript('x', 'C:\\o.wav', { wpm: 80 });
+        const fast = buildSapiScript('x', 'C:\\o.wav', { wpm: 200 });
+
+        const rateOf = (s) => Number(/Rate = (-?\d+)/.exec(s)[1]);
+        assert.ok(rateOf(slow) < rateOf(fast));
+        // SAPI only accepts -10..10.
+        for (const s of [slow, fast]) {
+          assert.ok(rateOf(s) >= -10 && rateOf(s) <= 10);
+        }
+      });
     });
   });
 });

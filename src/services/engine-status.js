@@ -1,6 +1,6 @@
 import { resolveProviderName } from './ai/index.js';
 import { detectTranscriberEngine } from './transcriber.js';
-import { detectTtsEngine } from './tts.js';
+import { detectTtsEngine, listTtsEngines } from './tts.js';
 
 /**
  * Describes which engines exist, which are usable, and which one the current
@@ -89,32 +89,42 @@ export function describeSttEngines(config = {}) {
 export function describeTtsEngines(config = {}) {
   const selected = config.ttsEngine || 'auto';
   const resolvedEngine = detectTtsEngine(config);
-  const piper = detectTtsEngine({ ...config, ttsEngine: 'piper' });
-  const espeak = detectTtsEngine({ ...config, ttsEngine: 'espeak-ng' });
+
+  const DETAILS = {
+    piper: (probe) => probe
+      ? `Ready — voice ${probe.model.split(/[\\/]/).pop()}`
+      : 'pip install piper-tts, then add a .onnx voice to the model folder',
+    google: () => 'Natural voice, but needs an internet connection',
+    say: (probe) => probe ? 'Ready — built into macOS' : 'Only available on macOS',
+    sapi: (probe) => probe ? 'Ready — built into Windows' : 'Only available on Windows',
+    'espeak-ng': (probe) => probe
+      ? 'Ready — formant synthesis; do not shadow its prosody'
+      : 'Install espeak-ng'
+  };
+
+  const LABELS = {
+    piper: 'piper (local, natural)',
+    google: 'Google Translate TTS',
+    say: 'macOS say (local, natural)',
+    sapi: 'Windows SAPI (local)',
+    'espeak-ng': 'espeak-ng (local, robotic)'
+  };
+
+  // Only the engines this platform can actually run are offered; listing
+  // macOS say on Linux would be noise, not a discoverable capability.
+  const engineOptions = listTtsEngines().map((type) => {
+    const probe = type === 'google' ? { type } : detectTtsEngine({ ...config, ttsEngine: type });
+    return option(type, LABELS[type] || type, Boolean(probe), DETAILS[type]?.(probe) ?? '');
+  });
 
   return {
     selected,
     resolved: resolvedEngine?.type ?? null,
     options: [
       option('auto', 'Auto-detect', true, 'Best available voice, quality first'),
-      option(
-        'piper',
-        'piper (local, natural)',
-        Boolean(piper),
-        piper
-          ? `Ready — voice ${piper.model.split('/').pop()}`
-          : 'pip install piper-tts, then put a .onnx voice in ~/.local/share/piper'
-      ),
-      option('google', 'Google Translate TTS', true, 'Natural voice, but needs an internet connection'),
-      option(
-        'espeak-ng',
-        'espeak-ng (local, robotic)',
-        Boolean(espeak),
-        espeak
-          ? 'Ready — formant synthesis; do not shadow its prosody'
-          : 'Install espeak-ng'
-      ),
+      ...engineOptions,
       option('off', 'Off', true, 'No reference audio')
     ]
   };
 }
+

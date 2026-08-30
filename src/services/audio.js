@@ -1,40 +1,49 @@
-import { exec, execSync } from 'node:child_process';
+import { exec } from 'node:child_process';
 import { loadConfig } from './config.js';
 import { synthesize } from './tts.js';
+import { hasBinary, audioPlayersFor } from './platform.js';
 
 /**
  * Playback only. Rendering a phrase to audio now lives in tts.js, so the
  * engine that speaks and the program that plays are chosen independently.
  */
 
-const ALL_CANDIDATES = {
-  ffplay: { type: 'ffplay', cmd: 'ffplay', args: '-nodisp -autoexit -loglevel quiet' },
-  mpg123: { type: 'mpg123', cmd: 'mpg123', args: '-q' },
-  aplay: { type: 'aplay', cmd: 'aplay', args: '-q' }
-};
+function candidates() {
+  return Object.fromEntries(audioPlayersFor().map((p) => [p.type, p]));
+}
 
 function detectPlayer() {
   const config = loadConfig();
   if (config.audioPlayer === 'muted') return null;
 
-  if (config.audioPlayer && config.audioPlayer !== 'auto' && ALL_CANDIDATES[config.audioPlayer]) {
-    try {
-      execSync(`which ${ALL_CANDIDATES[config.audioPlayer].cmd}`, { stdio: 'ignore' });
-      return ALL_CANDIDATES[config.audioPlayer];
-    } catch {
-      // Fallback to auto
-    }
+  const available = candidates();
+
+  if (config.audioPlayer && config.audioPlayer !== 'auto' && available[config.audioPlayer]) {
+    if (hasBinary(available[config.audioPlayer].cmd)) return available[config.audioPlayer];
+    // Fall through to auto-detection rather than leaving the learner in silence.
   }
 
-  for (const c of Object.values(ALL_CANDIDATES)) {
-    try {
-      execSync(`which ${c.cmd}`, { stdio: 'ignore' });
-      return c;
-    } catch {
-      // continue
-    }
+  for (const c of Object.values(available)) {
+    if (hasBinary(c.cmd)) return c;
   }
   return null;
+}
+
+/**
+ * Builds the shell command for a player.
+ * Most players take the file as a trailing argument; the Windows fallback needs
+ * a PowerShell one-liner instead, so the shape cannot be shared.
+ * @param {{ type: string, cmd: string, args: string }} player
+ * @param {string} args
+ * @param {string} filePath
+ * @returns {string}
+ */
+export function playbackCommand(player, args, filePath) {
+  if (player.type === 'powershell') {
+    const escaped = filePath.replace(/'/g, "''");
+    return `${player.cmd} ${player.args} "(New-Object Media.SoundPlayer '${escaped}').PlaySync()"`;
+  }
+  return `${player.cmd} ${args} "${filePath}"`.replace(/\s+/g, ' ').trim();
 }
 
 export function isAudioSupported() {
@@ -72,7 +81,7 @@ export async function playAudio(text, options = {}) {
   }
 
   return new Promise((resolve) => {
-    exec(`${player.cmd} ${speedArgs} "${rendered.path}"`, (err) => {
+    exec(playbackCommand(player, speedArgs, rendered.path), (err) => {
       resolve(err ? { played: false, reason: err.message } : { played: true, engine: rendered.engine });
     });
   });
@@ -106,7 +115,7 @@ export async function playAudioFile(filePath) {
   }
 
   return new Promise((resolve) => {
-    exec(`${player.cmd} ${player.args} "${filePath}"`, (err) => {
+    exec(playbackCommand(player, player.args, filePath), (err) => {
       if (err) resolve({ played: false, reason: err.message });
       else resolve({ played: true });
     });

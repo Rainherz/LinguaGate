@@ -23,7 +23,6 @@ function randomSeed() {
 const str = (description) => ({ type: 'string', description });
 const bool = (description) => ({ type: 'boolean', description });
 const num = (description) => ({ type: 'number', description });
-const strArray = (description) => ({ type: 'array', items: { type: 'string' }, description });
 
 /** @param {Record<string, object>} properties */
 const objectSchema = (properties) => ({
